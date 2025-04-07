@@ -1,89 +1,39 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Beer Stack</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #0f2027; }
-    canvas { display: block; }
-    #restart { position: absolute; top: 20px; right: 20px; background: #fff; border: none;
-               padding: 10px 20px; border-radius: 10px; font-size: 16px; cursor: pointer;
-               z-index: 10; display: none; }
-  </style>
+  <title>Beer Clicker</title>
+  <meta charset="utf-8">
+  <script>
+    let level = 0;
+
+    function sendScore() {
+      const tg = window.Telegram.WebApp;
+      fetch("https://beer-backend-bqh2.onrender.com/api/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: tg.initDataUnsafe.user.id,
+          score: level,
+          chat_id: localStorage.getItem("chat_id"),
+          message_id: localStorage.getItem("message_id")
+        })
+      }).then(r => r.json()).then(console.log).catch(console.error);
+    }
+
+    function increment() {
+      level++;
+      document.getElementById("score").textContent = level;
+      sendScore();
+    }
+
+    window.onload = function () {
+      Telegram.WebApp.ready();
+    };
+  </script>
 </head>
 <body>
-<button id="restart">Играть снова</button>
-<canvas id="game"></canvas>
-<div id="score" style="position: absolute; top: 20px; left: 20px; color: white; font-size: 20px;
-  font-weight: bold; font-family: sans-serif; z-index: 10;">🍺 0</div>
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-let W = window.innerWidth, H = window.innerHeight;
-canvas.width = W; canvas.height = H;
-
-const blockHeight = 40, initialWidth = 200;
-let speed = 0, gameStarted = false, direction = 1, level = 0;
-let gameOver = false, cameraOffset = 0, targetCameraOffset = 0;
-const stack = [];
-const beerImage = new Image();
-beerImage.src = 'beer-glass.png';
-function newBlock(width) { return { x: (W - width)/2, y: H/2 - blockHeight * (stack.length + 1), width }; }
-let current = newBlock(initialWidth);
-function drawBlock(b) {
-  const y = b.y + cameraOffset;
-  if (beerImage.complete) ctx.drawImage(beerImage, b.x, y, b.width, blockHeight);
-  else { ctx.fillStyle = "#ffcc00"; ctx.fillRect(b.x, y, b.width, blockHeight); }
-}
-function draw() { ctx.clearRect(0, 0, W, H); stack.forEach(drawBlock); drawBlock(current); }
-function update() {
-  if (gameOver) return;
-  cameraOffset += (targetCameraOffset - cameraOffset) * 0.1;
-  current.x += speed * direction;
-  if (current.x + current.width > W || current.x < 0) direction *= -1;
-  document.getElementById("score").textContent = `🍺 ${level}`;
-}
-function placeBlock() {
-  if (gameOver) return;
-  const last = stack[stack.length - 1];
-  if (last) {
-    const delta = current.x - last.x;
-    const overlap = current.width - Math.abs(delta);
-    if (overlap <= 5) {
-      gameOver = true;
-      document.getElementById("restart").style.display = "block";
-      if (Telegram.WebApp?.sendData) {
-        fetch("/score", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            initData: Telegram.WebApp.initData,
-            score: level
-          })
-        });
-      }
-      return;
-    }
-    current.width = overlap;
-    current.x = delta > 0 ? current.x : last.x;
-  }
-  stack.push({...current});
-  level++; targetCameraOffset += blockHeight * 0.8;
-  current = newBlock(current.width);
-}
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-function restartGame() {
-  stack.length = 0; current = newBlock(initialWidth); level = 0;
-  gameOver = false; cameraOffset = 0; targetCameraOffset = 0;
-  document.getElementById("restart").style.display = "none";
-}
-canvas.addEventListener("pointerdown", () => { if (!gameStarted) { speed = 6; gameStarted = true; } placeBlock(); }, { once: true });
-document.body.addEventListener("pointerdown", placeBlock);
-document.getElementById("restart").addEventListener("click", restartGame);
-if (Telegram) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
-loop();
-</script>
+  <h1>🍺 Beer Clicker</h1>
+  <button onclick="increment()">Click Me!</button>
+  <p>Score: <span id="score">0</span></p>
 </body>
 </html>
