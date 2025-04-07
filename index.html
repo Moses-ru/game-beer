@@ -1,9 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Beer Clicker</title>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <title>🍺 Beer Clicker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    #beer-button {
+      font-size: 3rem;
+      padding: 20px 40px;
+      background-color: #fdcb6e;
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    #beer-button:hover {
+      transform: scale(1.05);
+    }
+
+    #beer-button:active {
+      transform: scale(0.95);
+    }
+
+    #score {
+      font-size: 2rem;
+      margin-top: 20px;
+      color: #2d3436;
+    }
+  </style>
   <script>
     let level = 0;
 
@@ -23,7 +68,7 @@
 
     function increment() {
       level++;
-      document.getElementById("score").textContent = level;
+      document.getElementById("score").textContent = `Очки: ${level}`;
       sendScore();
     }
 
@@ -40,8 +85,8 @@
   </script>
 </head>
 <body>
-  <h1>🍺 Beer Clicker</h1>
-  <button onclick="increment()">Click Me!</button>
-  <p>Score: <span id="score">0</span></p>
+  <h1>🍻 Beer Clicker</h1>
+  <button id="beer-button" onclick="increment()">🍺 Налить!</button>
+  <p id="score">Очки: 0</p>
 </body>
 </html>
