@@ -69,7 +69,8 @@ canvas.height = H;
 
 const blockHeight = 40;
 const initialWidth = 200;
-let speed = 6;
+let speed = 0; // Отключено в начале
+let gameStarted = false;
 let direction = 1;
 let level = 0;
 let gameOver = false;
@@ -81,7 +82,7 @@ beerImage.src = 'beer-glass.png';
 
 function newBlock(width) {
   return {
-    x: 0,
+    x: (W - width) / 2, // Центрирование
     y: H - blockHeight * (stack.length + 1),
     width,
     spawnProgress: 0
@@ -162,6 +163,10 @@ function restartGame() {
 }
 
 canvas.addEventListener("pointerdown", () => {
+  if (!gameStarted) {
+    speed = 6; // Включаем движение после первого клика
+    gameStarted = true;
+  }
   document.getElementById("bg-music")?.play().catch(() => {});
   placeBlock();
 }, { once: true });
