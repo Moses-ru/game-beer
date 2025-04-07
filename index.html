@@ -3,6 +3,7 @@
 <head>
   <title>Beer Clicker</title>
   <meta charset="utf-8">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     let level = 0;
 
@@ -28,6 +29,13 @@
 
     window.onload = function () {
       Telegram.WebApp.ready();
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("chat_id")) {
+        localStorage.setItem("chat_id", urlParams.get("chat_id"));
+      }
+      if (urlParams.has("message_id")) {
+        localStorage.setItem("message_id", urlParams.get("message_id"));
+      }
     };
   </script>
 </head>
