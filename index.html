@@ -1,68 +1,15 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <title>Beer Clicker</title>
   <meta charset="utf-8">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      background-color: #ffefd5;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-
-    h1 {
-      font-size: 2em;
-    }
-
-    button {
-      font-size: 1.5em;
-      padding: 20px 40px;
-      margin: 20px;
-      background-color: #ffcc00;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 4px #c9a200;
-      transition: 0.2s;
-    }
-
-    button:active {
-      box-shadow: 0 2px #c9a200;
-      transform: translateY(2px);
-    }
-
-    .foam {
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2em;
-      animation: rise 0.8s ease-out forwards;
-      pointer-events: none;
-    }
-
-    @keyframes rise {
-      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -150%) scale(1.5); }
-    }
-  </style>
-</head>
-<body>
-  <h1>🍺 <b>Beer Clicker</b></h1>
-  <button onclick="increment()">🍺 Налить!</button>
-  <p>Счёт: <span id="score">0</span></p>
-  <p id="place">Загрузка места...</p>
-
-  <audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
-
   <script>
     let level = 0;
-    const tg = window.Telegram.WebApp;
-    const clickSound = document.getElementById("clickSound");
 
     function sendScore() {
+      const tg = window.Telegram.WebApp;
       fetch("https://beer-backend-bqh2.onrender.com/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,37 +22,24 @@
       }).then(r => r.json()).then(console.log).catch(console.error);
     }
 
-    function loadPlace() {
-      fetch(`https://beer-backend-bqh2.onrender.com/api/highscores?user_id=${tg.initDataUnsafe.user.id}&chat_id=${localStorage.getItem("chat_id")}&message_id=${localStorage.getItem("message_id")}`)
-        .then(r => r.json())
-        .then(data => {
-          const index = data.findIndex(s => s.user.id === tg.initDataUnsafe.user.id);
-          if (index !== -1) {
-            document.getElementById("place").textContent = `Ваше место: ${index + 1} из ${data.length}`;
-          } else {
-            document.getElementById("place").textContent = "Вы пока вне топа 🍻";
-          }
-        })
-        .catch(() => {
-          document.getElementById("place").textContent = "Ошибка загрузки места";
-        });
-    }
-
-    function showFoam() {
-      const foam = document.createElement("div");
-      foam.className = "foam";
-      foam.textContent = "🍺";
-      document.body.appendChild(foam);
-      setTimeout(() => foam.remove(), 1000);
-    }
-
     function increment() {
       level++;
       document.getElementById("score").textContent = level;
-      clickSound.currentTime = 0;
-      clickSound.play();
-      showFoam();
       sendScore();
+    }
+
+    function loadLeaderboard() {
+      fetch("https://beer-backend-bqh2.onrender.com/api/leaderboard")
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById("leaderboard");
+          list.innerHTML = "";
+          data.forEach(entry => {
+            const li = document.createElement("li");
+            li.textContent = `User ${entry.user_id}: ${entry.score}`;
+            list.appendChild(li);
+          });
+        });
     }
 
     window.onload = function () {
@@ -117,8 +51,15 @@
       if (urlParams.has("message_id")) {
         localStorage.setItem("message_id", urlParams.get("message_id"));
       }
-      loadPlace();
+      loadLeaderboard();
     };
   </script>
+</head>
+<body>
+  <h1>🍺 Beer Clicker</h1>
+  <button onclick="increment()">Click Me!</button>
+  <p>Score: <span id="score">0</span></p>
+  <h2>🏆 Leaderboard</h2>
+  <ol id="leaderboard"></ol>
 </body>
 </html>
