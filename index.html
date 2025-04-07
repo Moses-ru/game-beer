@@ -69,7 +69,7 @@ canvas.height = H;
 
 const blockHeight = 40;
 const initialWidth = 200;
-let speed = 0; // Отключено в начале
+let speed = 0;
 let gameStarted = false;
 let direction = 1;
 let level = 0;
@@ -82,7 +82,7 @@ beerImage.src = 'beer-glass.png';
 
 function newBlock(width) {
   return {
-    x: (W - width) / 2, // Центрирование
+    x: (W - width) / 2,
     y: H - blockHeight * (stack.length + 1),
     width,
     spawnProgress: 0
@@ -98,7 +98,7 @@ function drawBlock(block) {
     ctx.beginPath();
     ctx.rect(block.x, screenY, block.width, blockHeight);
     ctx.clip();
-    ctx.drawImage(beerImage, block.x, screenY, beerImage.width, blockHeight);
+    ctx.drawImage(beerImage, block.x, screenY, block.width, blockHeight);
     ctx.restore();
   } else {
     ctx.fillStyle = "#ffcc00";
@@ -164,7 +164,7 @@ function restartGame() {
 
 canvas.addEventListener("pointerdown", () => {
   if (!gameStarted) {
-    speed = 6; // Включаем движение после первого клика
+    speed = 6;
     gameStarted = true;
   }
   document.getElementById("bg-music")?.play().catch(() => {});
