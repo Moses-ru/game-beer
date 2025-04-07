@@ -4,11 +4,47 @@
   <title>Beer Clicker</title>
   <meta charset="utf-8">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1, h2 {
+      color: #fbbf24;
+    }
+    button {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      margin: 1rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #3b82f6;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    #score {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    ol {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  </style>
   <script>
     let level = 0;
+    const tg = window.Telegram.WebApp;
 
     function sendScore() {
-      const tg = window.Telegram.WebApp;
       fetch("https://beer-backend-bqh2.onrender.com/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -25,7 +61,6 @@
     function increment() {
       level++;
       document.getElementById("score").textContent = level;
-      sendScore();
     }
 
     function loadLeaderboard() {
@@ -59,6 +94,7 @@
   <h1>🍺 Beer Clicker</h1>
   <button onclick="increment()">Click Me!</button>
   <p>Score: <span id="score">0</span></p>
+  <button onclick="sendScore()">💾 Сохранить в лидерборд</button>
   <h2>🏆 Leaderboard</h2>
   <ol id="leaderboard"></ol>
 </body>
