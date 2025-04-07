@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>🍺 Beer Clicker</title>
@@ -7,50 +7,81 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #ffeaa7, #fab1a0);
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      font-family: "Arial", sans-serif;
       text-align: center;
+      background: #ffe9c5;
+      margin: 0;
+      padding: 30px;
+      overflow: hidden;
     }
-
     h1 {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
+      font-size: 2em;
+      margin-bottom: 10px;
     }
-
     #beer-button {
-      font-size: 3rem;
+      font-size: 2rem;
       padding: 20px 40px;
-      background-color: #fdcb6e;
+      background-color: #ffcc00;
       border: none;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      border-radius: 20px;
       cursor: pointer;
+      box-shadow: 0 5px #b38b00;
       transition: transform 0.1s;
     }
-
-    #beer-button:hover {
-      transform: scale(1.05);
-    }
-
     #beer-button:active {
-      transform: scale(0.95);
+      transform: translateY(4px);
+      box-shadow: 0 2px #b38b00;
+    }
+    #score, #place {
+      font-size: 1.5rem;
+      margin-top: 20px;
     }
 
-    #score {
-      font-size: 2rem;
-      margin-top: 20px;
-      color: #2d3436;
+    /* Foam animation */
+    #foam-container {
+      position: absolute;
+      bottom: 140px;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+    }
+    .foam {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: rise 1s ease-out forwards;
+      opacity: 0.8;
+    }
+    @keyframes rise {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-100px); opacity: 0; }
     }
   </style>
+</head>
+<body>
+  <h1>🍺 Beer Clicker</h1>
+  <div id="foam-container"></div>
+  <button id="beer-button" onclick="increment()">🍺 Налить!</button>
+  <p>Счёт: <span id="score">0</span></p>
+  <p id="place">Загрузка места...</p>
+  <audio id="click-sound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+
   <script>
     let level = 0;
+
+    function playSound() {
+      const audio = document.getElementById("click-sound");
+      audio.currentTime = 0;
+      audio.play();
+    }
+
+    function showFoam() {
+      const foam = document.createElement("div");
+      foam.className = "foam";
+      foam.textContent = "🫧";
+      foam.style.left = `${50 + (Math.random() * 40 - 20)}%`;
+      document.getElementById("foam-container").appendChild(foam);
+      setTimeout(() => foam.remove(), 1000);
+    }
 
     function sendScore() {
       const tg = window.Telegram.WebApp;
@@ -66,9 +97,27 @@
       }).then(r => r.json()).then(console.log).catch(console.error);
     }
 
+    function getLeaderboard() {
+      const tg = window.Telegram.WebApp;
+      fetch(`https://beer-backend-bqh2.onrender.com/api/leaderboard?user_id=${tg.initDataUnsafe.user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.place !== undefined) {
+            document.getElementById("place").textContent = `🏆 Ваше место: ${data.place}`;
+          } else {
+            document.getElementById("place").textContent = "🏆 Место не найдено";
+          }
+        }).catch(err => {
+          console.error(err);
+          document.getElementById("place").textContent = "🏆 Ошибка при загрузке места";
+        });
+    }
+
     function increment() {
       level++;
-      document.getElementById("score").textContent = `Очки: ${level}`;
+      document.getElementById("score").textContent = level;
+      playSound();
+      showFoam();
       sendScore();
     }
 
@@ -81,12 +130,8 @@
       if (urlParams.has("message_id")) {
         localStorage.setItem("message_id", urlParams.get("message_id"));
       }
+      getLeaderboard();
     };
   </script>
-</head>
-<body>
-  <h1>🍻 Beer Clicker</h1>
-  <button id="beer-button" onclick="increment()">🍺 Налить!</button>
-  <p id="score">Очки: 0</p>
 </body>
 </html>
