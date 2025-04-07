@@ -6,124 +6,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: linear-gradient(to top, #0f2027, #203a43, #2c5364);
-    }
-    canvas {
-      display: block;
-    }
-    #restart {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 10;
-      display: none;
-    }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #0f2027; }
+    canvas { display: block; }
+    #restart { position: absolute; top: 20px; right: 20px; background: #fff; border: none;
+               padding: 10px 20px; border-radius: 10px; font-size: 16px; cursor: pointer;
+               z-index: 10; display: none; }
   </style>
 </head>
 <body>
 <button id="restart">Играть снова</button>
 <canvas id="game"></canvas>
-<audio id="bg-music" src="music.mp3" loop></audio>
-<div id="score" style="
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  font-family: sans-serif;
-  z-index: 10;
-">🍺 0</div>
-<div id="leaderboard" style="
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.5);
-  color: white;
-  font-size: 14px;
-  padding: 10px;
-  box-sizing: border-box;
-  font-family: sans-serif;
-  max-height: 120px;
-  overflow-y: auto;
-  display: none;
-"></div>
+<div id="score" style="position: absolute; top: 20px; left: 20px; color: white; font-size: 20px;
+  font-weight: bold; font-family: sans-serif; z-index: 10;">🍺 0</div>
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-let W = window.innerWidth;
-let H = window.innerHeight;
-canvas.width = W;
-canvas.height = H;
+let W = window.innerWidth, H = window.innerHeight;
+canvas.width = W; canvas.height = H;
 
-const blockHeight = 40;
-const initialWidth = 200;
-let speed = 0;
-let gameStarted = false;
-let direction = 1;
-let level = 0;
-let gameOver = false;
-let cameraOffset = 0;
-let targetCameraOffset = 0;
+const blockHeight = 40, initialWidth = 200;
+let speed = 0, gameStarted = false, direction = 1, level = 0;
+let gameOver = false, cameraOffset = 0, targetCameraOffset = 0;
 const stack = [];
 const beerImage = new Image();
 beerImage.src = 'beer-glass.png';
-
-function newBlock(width) {
-  return {
-    x: (W - width) / 2,
-    y: H / 2 - blockHeight * (stack.length + 1),
-    width,
-    spawnProgress: 0
-  };
-}
+function newBlock(width) { return { x: (W - width)/2, y: H/2 - blockHeight * (stack.length + 1), width }; }
 let current = newBlock(initialWidth);
-
-function drawBlock(block) {
-  let screenY = block.y + cameraOffset;
-  if (block.spawnProgress < 1) screenY -= (1 - block.spawnProgress) * 80;
-  if (beerImage.complete && beerImage.naturalWidth) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(block.x, screenY, block.width, blockHeight);
-    ctx.clip();
-    ctx.drawImage(beerImage, block.x, screenY, block.width, blockHeight);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = "#ffcc00";
-    ctx.fillRect(block.x, screenY, block.width, blockHeight);
-  }
+function drawBlock(b) {
+  const y = b.y + cameraOffset;
+  if (beerImage.complete) ctx.drawImage(beerImage, b.x, y, b.width, blockHeight);
+  else { ctx.fillStyle = "#ffcc00"; ctx.fillRect(b.x, y, b.width, blockHeight); }
 }
-
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  stack.forEach(drawBlock);
-  drawBlock(current);
-}
-
+function draw() { ctx.clearRect(0, 0, W, H); stack.forEach(drawBlock); drawBlock(current); }
 function update() {
   if (gameOver) return;
-  if (current.spawnProgress < 1) current.spawnProgress += 0.05;
   cameraOffset += (targetCameraOffset - cameraOffset) * 0.1;
   current.x += speed * direction;
   if (current.x + current.width > W || current.x < 0) direction *= -1;
   document.getElementById("score").textContent = `🍺 ${level}`;
 }
-
 function placeBlock() {
   if (gameOver) return;
-  if (navigator.vibrate) navigator.vibrate(50);
   const last = stack[stack.length - 1];
   if (last) {
     const delta = current.x - last.x;
@@ -131,72 +54,35 @@ function placeBlock() {
     if (overlap <= 5) {
       gameOver = true;
       document.getElementById("restart").style.display = "block";
-      
-      // Отправка результата боту
-      if (Telegram.WebApp && Telegram.WebApp.sendData) {
-        Telegram.WebApp.sendData(level.toString());
+      if (Telegram.WebApp?.sendData) {
+        fetch("/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            initData: Telegram.WebApp.initData,
+            score: level
+          })
+        });
       }
-
       return;
     }
     current.width = overlap;
     current.x = delta > 0 ? current.x : last.x;
   }
-  stack.push({ ...current });
-  level++;
-  targetCameraOffset += blockHeight * 0.8;
+  stack.push({...current});
+  level++; targetCameraOffset += blockHeight * 0.8;
   current = newBlock(current.width);
 }
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-
+function loop() { update(); draw(); requestAnimationFrame(loop); }
 function restartGame() {
-  stack.length = 0;
-  current = newBlock(initialWidth);
-  level = 0;
-  gameOver = false;
-  cameraOffset = 0;
-  targetCameraOffset = 0;
+  stack.length = 0; current = newBlock(initialWidth); level = 0;
+  gameOver = false; cameraOffset = 0; targetCameraOffset = 0;
   document.getElementById("restart").style.display = "none";
-  document.getElementById("score").textContent = `🍺 0`;
 }
-
-canvas.addEventListener("pointerdown", () => {
-  if (!gameStarted) {
-    speed = 6;
-    gameStarted = true;
-  }
-  document.getElementById("bg-music")?.play().catch(() => {});
-  placeBlock();
-}, { once: true });
-
+canvas.addEventListener("pointerdown", () => { if (!gameStarted) { speed = 6; gameStarted = true; } placeBlock(); }, { once: true });
 document.body.addEventListener("pointerdown", placeBlock);
 document.getElementById("restart").addEventListener("click", restartGame);
-
-if (typeof Telegram !== "undefined") {
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-}
-
-function loadLeaderboard() {
-  if (!Telegram.WebApp.initDataUnsafe?.user) return;
-  Telegram.WebApp.getGameHighScores(Telegram.WebApp.initDataUnsafe.user.id, (scores) => {
-    if (!scores?.length) return;
-    const leaderboard = document.getElementById("leaderboard");
-    leaderboard.innerHTML = "<b>🏆 Лидеры:</b><br>";
-    scores.forEach((entry, index) => {
-      const user = entry.user.username || `${entry.user.first_name || "Игрок"} ${entry.user.last_name || ""}`;
-      leaderboard.innerHTML += `${index + 1}. ${user}: ${entry.score}<br>`;
-    });
-    leaderboard.style.display = "block";
-  });
-}
-
-loadLeaderboard();
+if (Telegram) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
 loop();
 </script>
 </body>
