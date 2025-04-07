@@ -4,33 +4,6 @@
   <title>Beer Clicker</title>
   <meta charset="utf-8">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 40px;
-      background: #f7f7f7;
-    }
-    h1 {
-      font-size: 2em;
-    }
-    button {
-      font-size: 1.2em;
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background-color: #ffcc00;
-    }
-    button:hover {
-      background-color: #ffaa00;
-    }
-    #score {
-      font-size: 2em;
-      color: #333;
-    }
-  </style>
   <script>
     let level = 0;
 
@@ -54,15 +27,8 @@
       sendScore();
     }
 
-    function showLeaderboard() {
-      const tg = window.Telegram.WebApp;
-      tg.showLeaderboard(); // Показывает Telegram-лидерборд
-    }
-
     window.onload = function () {
       Telegram.WebApp.ready();
-
-      // Сохраняем параметры chat_id и message_id из URL в localStorage
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has("chat_id")) {
         localStorage.setItem("chat_id", urlParams.get("chat_id"));
@@ -75,9 +41,7 @@
 </head>
 <body>
   <h1>🍺 Beer Clicker</h1>
+  <button onclick="increment()">Click Me!</button>
   <p>Score: <span id="score">0</span></p>
-  <button onclick="increment()">👆 Click Me!</button>
-  <br>
-  <button onclick="showLeaderboard()">🏆 Leaderboard</button>
 </body>
 </html>
