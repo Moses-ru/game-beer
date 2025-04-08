@@ -46,8 +46,11 @@
 
     function sendScore() {
       const user = tg.initDataUnsafe.user;
+      console.log("\u{1F4DC} tg.initData:", tg.initData);
+      console.log("\u{1F4DC} tg.initDataUnsafe.user:", user);
+
       if (!user) {
-        alert("User info not available — запусти игру через Telegram");
+        alert("\u26A0\uFE0F Пользователь не определён. Запусти игру через Telegram.");
         return;
       }
 
@@ -62,18 +65,21 @@
           username: user.username,
           score: level
         })
-      }).then(r => r.json())
-        .then(data => {
-          console.log(data);
-          tg.setGameScore(level, () => {
-            tg.showPopup({ message: "Счёт сохранён!" });
-          });
-          loadLeaderboard();
-        })
-        .catch(err => {
-          console.error(err);
-          tg.showPopup({ message: "Ошибка при сохранении!" });
+      }).then(r => {
+        if (!r.ok) {
+          throw new Error("Server response: " + r.status);
+        }
+        return r.json();
+      }).then(data => {
+        console.log("\u2705 Счёт отправлен:", data);
+        tg.setGameScore(level, () => {
+          tg.showPopup({ message: "Счёт сохранён!" });
         });
+        loadLeaderboard();
+      }).catch(err => {
+        console.error("\u274C Ошибка при сохранении:", err);
+        tg.showPopup({ message: "Ошибка при сохранении счёта!" });
+      });
     }
 
     function increment() {
@@ -97,9 +103,11 @@
 
     window.onload = function () {
       Telegram.WebApp.ready();
+      console.log("\u2705 WebApp готов");
 
-      if (!Telegram.WebApp.initDataUnsafe?.user) {
-        alert("❗ Запусти игру через Telegram, иначе нельзя сохранить результат.");
+      if (!tg.initData || !tg.initDataUnsafe?.user) {
+        alert("\u26A0\uFE0F Эта игра должна запускаться через Telegram WebApp.\nПерейди в бота и нажми кнопку 'Играть'");
+        console.warn("\u26A0\uFE0F initData или user пустые:", tg.initData, tg.initDataUnsafe.user);
         return;
       }
 
