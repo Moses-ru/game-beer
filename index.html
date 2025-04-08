@@ -66,7 +66,11 @@
     #menu {
       position: absolute;
       top: 0.5rem;
-      right: 1rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 1rem;
     }
 
     #menu button {
@@ -143,7 +147,7 @@
 <body>
   <div id="achievementPopup"></div>
   <div id="menu">
-    <button onclick="toggleMusic()">🎵</button>
+    <button onclick="toggleMusic()">🔊</button>
     <button onclick="restartGame()">↻</button>
   </div>
   <h1>⬟ Dublin Tetris</h1>
@@ -165,6 +169,17 @@
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     context.scale(20, 20);
+
+    function toggleMusic() {
+      const btn = document.querySelector('#menu button[onclick="toggleMusic()"]');
+      if (backgroundMusic.paused) {
+        backgroundMusic.play();
+        btn.textContent = "🔊";
+      } else {
+        backgroundMusic.pause();
+        btn.textContent = "🔇";
+      }
+    }
 
     const sounds = {
       move: new Audio('sounds/move.mp3'),
