@@ -16,6 +16,27 @@
       text-align: center;
       overflow: hidden;
     }
+    
+    #achievementPopup {
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(251, 191, 36, 0.9);
+      color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px #fbbf24;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, top 0.5s ease;
+      z-index: 999;
+    }
+    #achievementPopup.show {
+      opacity: 1;
+      top: 2rem;
+    }
 
     canvas {
       background-color: rgba(30, 41, 59, 0.6);
@@ -48,7 +69,22 @@
       right: 1rem;
     }
 
-    #menu button,
+    #menu button {
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      font-size: 1.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fbbf24;
+      color: #1e293b;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 10px #fbbf24;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
     #gameOver button,
     .controls button {
       background-color: #fbbf24;
@@ -105,6 +141,7 @@
   </style>
 </head>
 <body>
+  <div id="achievementPopup"></div>
   <div id="menu">
     <button onclick="restartGame()">↻</button>
   </div>
@@ -251,6 +288,7 @@
     }
 
     function playerMove(dir) {
+      checkAchievements("move");
       player.pos.x += dir;
       if (collide(arena, player)) player.pos.x -= dir;
     }
@@ -268,6 +306,7 @@
     }
 
     function playerDropFull() {
+      checkAchievements("drop");
       while (!collide(arena, player)) {
         player.pos.y++;
       }
@@ -297,6 +336,7 @@
     }
 
     function restartGame() {
+      checkAchievements("restart");
       document.getElementById('gameOver').style.display = 'none';
       arena.forEach(row => row.fill(0));
       player.score = 0;
@@ -306,9 +346,10 @@
     }
 
     function updateScore() {
-      document.getElementById('score').innerText = 'Score: ' + player.score;
+      checkAchievements();
+      document.getElementById('score').innerText = 'СЧЁТ: ' + player.score;
       if (player.score && player.score % 50 === 0 && dropInterval > 100) {
-        dropInterval = Math.max(100, dropInterval / 2);
+        dropInterval = 500 - Math.min(400, Math.floor(player.score / 50) * 50);
       }
     }
 
@@ -316,6 +357,52 @@
     let player = { pos: {x: 0, y: 0}, matrix: null, score: 0, type: null };
     let dropCounter = 0;
     let dropInterval = 500;
+
+    const achievements = {
+      firstBlock: false,
+      score100: false,
+      score500: false,
+      usedDrop: false,
+      restarted: false,
+    };
+
+    function showAchievement(text) {
+      const popup = document.getElementById('achievementPopup');
+      popup.textContent = `🏅 ${text}`;
+      popup.classList.add('show');
+      setTimeout(() => {
+        popup.classList.remove('show');
+      }, 3000);
+    }
+
+    function checkAchievements(type = "") {
+      if (type === "move" && !achievements.firstBlock) {
+        achievements.firstBlock = true;
+        showAchievement("Первый блок!");
+      }
+
+      if (type === "drop" && !achievements.usedDrop) {
+        achievements.usedDrop = true;
+        showAchievement("Скоростной дроп!");
+      }
+
+      if (type === "restart" && !achievements.restarted) {
+        achievements.restarted = true;
+        showAchievement("Никогда не сдавайся!");
+      }
+
+      if (player.score >= 100 && !achievements.score100) {
+        achievements.score100 = true;
+        showAchievement("Первые 100 очков!");
+      }
+
+      if (player.score >= 500 && !achievements.score500) {
+        achievements.score500 = true;
+        showAchievement("Мастер 500!");
+      }
+    }
+
+
     let lastTime = 0;
 
     function update(time = 0) {
