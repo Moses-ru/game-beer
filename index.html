@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Tetris</title>
+  <title>Тетрис</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     html, body {
@@ -69,9 +69,9 @@
   <div id="menu">
     <button onclick="restartGame()">*️⃣</button>
   </div>
-  <h1>⬟ Tetris</h1>
+  <h1>⬟ Дублин Тетрис</h1>
   <canvas id="tetris" width="240" height="400"></canvas>
-  <div id="score">Score: 0</div>
+  <div id="score">Счёт: 0</div>
   <div class="controls">
     <button onclick="playerMove(-1)">⬅️</button>
     <button onclick="playerDrop()">⬇️</button>
@@ -79,8 +79,8 @@
     <button onclick="playerRotate(1)">🔄</button>
   </div>
   <div id="gameOver">
-    <div id="finalScore">Your score: 0</div>
-    <button onclick="restartGame()">Restart</button>
+    <div id="finalScore">Счёт: 0</div>
+    <button onclick="restartGame()">Рестарт</button>
   </div>
 
   <script>
