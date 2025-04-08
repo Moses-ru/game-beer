@@ -46,9 +46,7 @@
 
     function sendScore() {
       const user = tg.initDataUnsafe.user;
-      const initData = tg.initData;
-
-      if (!user || !initData) {
+      if (!user) {
         alert("User info not available — запусти игру через Telegram");
         return;
       }
@@ -57,7 +55,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Telegram-Bot-InitData": initData
+          "X-Telegram-Bot-InitData": tg.initData
         },
         body: JSON.stringify({
           user_id: user.id,
@@ -107,7 +105,7 @@
   <h1>🍺 Beer Clicker</h1>
   <button onclick="increment()">Click Me!</button>
   <p>Score: <span id="score">0</span></p>
-  <button onclick="sendScore()" class="save-button">📅 Сохранить в лидерборд</button>
+  <button onclick="sendScore()" class="save-button">📂 Сохранить в лидерборд</button>
   <h2>🏆 Leaderboard</h2>
   <ol id="leaderboard"></ol>
 </body>
