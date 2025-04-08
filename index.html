@@ -1,295 +1,182 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>🍺 Beer Tetris</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: #0f172a;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #f1f5f9;
-      height: 100vh;
-      overflow: hidden;
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+
+const colors = [
+  "#F87171",
+  "#FBBF24",
+  "#34D399",
+  "#60A5FA",
+  "#A78BFA",
+  "#F472B6",
+];
+
+const ROWS = 20;
+const COLS = 10;
+
+const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+
+const initialBlock = () => ({
+  x: Math.floor(COLS / 2),
+  y: 0,
+  color: getRandomColor(),
+});
+
+export default function StackGame() {
+  const [blocks, setBlocks] = useState([]);
+  const [current, setCurrent] = useState(initialBlock);
+  const [score, setScore] = useState(0);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const intervalRef = useRef(null);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const touchStartTime = useRef(null);
+  const holdRef = useRef(false);
+
+  const reset = () => {
+    setBlocks([]);
+    setScore(0);
+    setIsGameOver(false);
+    setCurrent(initialBlock());
+  };
+
+  const sendScore = (score) => {
+    const scoreData = JSON.stringify({ score });
+    if (window.parent) {
+      window.parent.postMessage(scoreData, '*');
     }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding-bottom: 1.5rem;
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.sendData(scoreData);
     }
-    h1 {
-      margin: 0.5rem;
-      color: #fbbf24;
-      font-size: 1.5rem;
+  };
+
+  const handlePlace = () => {
+    const newBlocks = [...blocks, current];
+    setBlocks(newBlocks);
+    const newScore = score + 1;
+    setScore(newScore);
+    sendScore(newScore);
+
+    if (newBlocks.some(block => block.y === 0)) {
+      setIsGameOver(true);
+      clearInterval(intervalRef.current);
+    } else {
+      setCurrent(initialBlock());
     }
-    canvas {
-      border: 5px solid #fbbf24;
-      background-color: #1e293b;
-      width: 90vw;
-      max-width: 320px;
-      height: auto;
-      touch-action: none;
-    }
-    #score {
-      font-size: 1rem;
-      margin: 0.3rem;
-    }
-    .controls {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      width: 90vw;
-      max-width: 320px;
-      margin-top: 0.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-    }
-    .controls button {
-      padding: 0.8rem;
-      font-size: 1.2rem;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      cursor: pointer;
-      flex: 1 1 30%;
-      touch-action: manipulation;
-    }
-    .controls button:active {
-      background-color: #2563eb;
-    }
-  </style>
-</head>
-<body>
-  <h1>🍺 Beer Tetris</h1>
-  <div id="score">Score: 0</div>
-  <canvas id="game" width="240" height="400"></canvas>
-  <div class="controls">
-    <button onclick="move(-1)">◀️</button>
-    <button onclick="rotate()">🔄</button>
-    <button onclick="move(1)">▶️</button>
-    <button onclick="drop()">⬇️</button>
-  </div>
+  };
 
-  <script>
-    const canvas = document.getElementById("game");
-    const context = canvas.getContext("2d");
-    context.scale(20, 20);
-
-    const arena = createMatrix(12, 20);
-    const player = {
-      pos: {x: 0, y: 0},
-      matrix: null,
-      score: 0
-    };
-
-    const colors = [
-      null,
-      '#f87171',
-      '#60a5fa',
-      '#34d399',
-      '#facc15',
-      '#a78bfa',
-      '#fb923c',
-      '#38bdf8'
-    ];
-
-    function createMatrix(w, h) {
-      const matrix = [];
-      while (h--) matrix.push(new Array(w).fill(0));
-      return matrix;
-    }
-
-    function createPiece(type) {
-      switch (type) {
-        case 'T': return [
-          [0, 0, 0],
-          [1, 1, 1],
-          [0, 1, 0],
-        ];
-        case 'O': return [
-          [2, 2],
-          [2, 2],
-        ];
-        case 'L': return [
-          [0, 3, 0],
-          [0, 3, 0],
-          [0, 3, 3],
-        ];
-        case 'J': return [
-          [0, 4, 0],
-          [0, 4, 0],
-          [4, 4, 0],
-        ];
-        case 'I': return [
-          [0, 5, 0, 0],
-          [0, 5, 0, 0],
-          [0, 5, 0, 0],
-          [0, 5, 0, 0],
-        ];
-        case 'S': return [
-          [0, 6, 6],
-          [6, 6, 0],
-          [0, 0, 0],
-        ];
-        case 'Z': return [
-          [7, 7, 0],
-          [0, 7, 7],
-          [0, 0, 0],
-        ];
-      }
-    }
-
-    function collide(arena, player) {
-      const m = player.matrix;
-      const o = player.pos;
-      for (let y = 0; y < m.length; ++y) {
-        for (let x = 0; x < m[y].length; ++x) {
-          if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    function merge(arena, player) {
-      player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-        });
-      });
-    }
-
-    function arenaSweep() {
-      let rowCount = 1;
-      outer: for (let y = arena.length - 1; y >= 0; --y) {
-        for (let x = 0; x < arena[y].length; ++x) {
-          if (arena[y][x] === 0) continue outer;
-        }
-        const row = arena.splice(y, 1)[0].fill(0);
-        arena.unshift(row);
-        ++y;
-        player.score += rowCount * 10;
-        rowCount *= 2;
-      }
-    }
-
-    function drawMatrix(matrix, offset) {
-      matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-            context.fillStyle = colors[value];
-            context.fillRect(x + offset.x, y + offset.y, 1, 1);
-          }
-        });
-      });
-    }
-
-    function draw() {
-      context.fillStyle = '#1e293b';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      drawMatrix(arena, {x: 0, y: 0});
-      drawMatrix(player.matrix, player.pos);
-    }
-
-    function drop() {
-      player.pos.y++;
-      if (collide(arena, player)) {
-        player.pos.y--;
-        merge(arena, player);
-        playerReset();
-        arenaSweep();
-        updateScore();
-      }
-      dropCounter = 0;
-    }
-
-    function move(dir) {
-      player.pos.x += dir;
-      if (collide(arena, player)) player.pos.x -= dir;
-    }
-
-    function rotate() {
-      const m = player.matrix;
-      for (let y = 0; y < m.length; ++y) {
-        for (let x = 0; x < y; ++x) {
-          [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-        }
-      }
-      m.forEach(row => row.reverse());
-      if (collide(arena, player)) {
-        m.forEach(row => row.reverse());
-        for (let y = 0; y < m.length; ++y) {
-          for (let x = 0; x < y; ++x) {
-            [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-          }
-        }
-      }
-    }
-
-    function playerReset() {
-      const pieces = 'TJLOSZI';
-      player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
-      player.pos.y = 0;
-      player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-      if (collide(arena, player)) {
-        arena.forEach(row => row.fill(0));
-        player.score = 0;
-        updateScore();
-      }
-    }
-
-    function updateScore() {
-      document.getElementById("score").innerText = "Score: " + player.score;
-    }
-
-    let dropCounter = 0;
-    let dropInterval = 400;
-    let lastTime = 0;
-
-    function update(time = 0) {
-      const deltaTime = time - lastTime;
-      lastTime = time;
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) drop();
-      draw();
-      requestAnimationFrame(update);
-    }
-
-    playerReset();
-    updateScore();
-    update();
-
-    // Touch control
-    let startX = 0;
-    let startY = 0;
-
-    canvas.addEventListener('touchstart', e => {
-      const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
-    });
-
-    canvas.addEventListener('touchend', e => {
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - startX;
-      const deltaY = touch.clientY - startY;
-
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX > 30) move(1);
-        else if (deltaX < -30) move(-1);
+  const moveDown = () => {
+    setCurrent((prev) => {
+      if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
+        return { ...prev, y: prev.y + 1 };
       } else {
-        if (deltaY > 30) drop();
-        else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) rotate();
+        handlePlace();
+        return prev;
       }
     });
-  </script>
-</body>
-</html>
+  };
+
+  useEffect(() => {
+    if (!isGameOver) {
+      intervalRef.current = setInterval(() => {
+        if (!holdRef.current) moveDown();
+      }, 500);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [blocks, isGameOver]);
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    touchStartTime.current = Date.now();
+    holdRef.current = true;
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartX.current;
+    const dy = touch.clientY - touchStartY.current;
+
+    if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+      setCurrent(prev => ({ ...prev, x: Math.max(0, Math.min(COLS - 1, prev.x + (dx > 0 ? 1 : -1))) }));
+      touchStartX.current = touch.clientX;
+    } else if (dy > 30) {
+      moveDown();
+      touchStartY.current = touch.clientY;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    const duration = Date.now() - touchStartTime.current;
+    if (duration < 200) {
+      // tap = rotate (noop in this simple version)
+    } else {
+      // hold = drop fast
+      let dropping = true;
+      while (dropping) {
+        setCurrent(prev => {
+          if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
+            return { ...prev, y: prev.y + 1 };
+          } else {
+            dropping = false;
+            handlePlace();
+            return prev;
+          }
+        });
+      }
+    }
+    holdRef.current = false;
+  };
+
+  return (
+    <div className="flex flex-col items-center mt-4 select-none">
+      <div className="text-xl font-bold mb-2">Score: {score}</div>
+      <div
+        className="relative bg-gray-900"
+        style={{ width: COLS * 20, height: ROWS * 20 }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {blocks.map((block, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-5 h-5"
+            style={{
+              left: block.x * 20,
+              top: block.y * 20,
+              backgroundColor: block.color,
+            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+          />
+        ))}
+        {!isGameOver && (
+          <motion.div
+            className="absolute w-5 h-5"
+            style={{
+              left: current.x * 20,
+              top: current.y * 20,
+              backgroundColor: current.color,
+            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+          />
+        )}
+        {isGameOver && (
+          <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center text-white text-xl font-bold">
+            Game Over
+          </div>
+        )}
+      </div>
+      {isGameOver && (
+        <button
+          onClick={reset}
+          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-xl shadow-lg"
+        >
+          Restart
+        </button>
+      )}
+    </div>
+  );
+}
