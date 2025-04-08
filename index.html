@@ -45,35 +45,38 @@
     const tg = window.Telegram.WebApp;
 
     function sendScore() {
-  const user = tg.initDataUnsafe.user;
-  if (!user) {
-    alert("User info not available — запусти игру через Telegram");
-    return;
-  }
+      const user = tg.initDataUnsafe.user;
+      const initData = tg.initData;
 
-  fetch("https://beer-backend-bqh2.onrender.com/api/score", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: user.id,
-      username: user.username,
-      score: level,
-      chat_id: localStorage.getItem("chat_id"),
-      message_id: localStorage.getItem("message_id")
-    })
-  }).then(r => r.json())
-    .then(data => {
-      console.log(data);
-      tg.setGameScore(level, () => {
-        tg.showPopup({ message: "Счёт сохранён!" });
-      });
-      loadLeaderboard(); // обновить список
-    })
-    .catch(err => {
-      console.error(err);
-      tg.showPopup({ message: "Ошибка при сохранении!" });
-    });
-}
+      if (!user || !initData) {
+        alert("User info not available — запусти игру через Telegram");
+        return;
+      }
+
+      fetch("https://beer-backend-bqh2.onrender.com/api/score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Telegram-Bot-InitData": initData
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          username: user.username,
+          score: level
+        })
+      }).then(r => r.json())
+        .then(data => {
+          console.log(data);
+          tg.setGameScore(level, () => {
+            tg.showPopup({ message: "Счёт сохранён!" });
+          });
+          loadLeaderboard();
+        })
+        .catch(err => {
+          console.error(err);
+          tg.showPopup({ message: "Ошибка при сохранении!" });
+        });
+    }
 
     function increment() {
       level++;
@@ -104,7 +107,7 @@
   <h1>🍺 Beer Clicker</h1>
   <button onclick="increment()">Click Me!</button>
   <p>Score: <span id="score">0</span></p>
-  <button onclick="sendScore()" class="save-button">💾 Сохранить в лидерборд</button>
+  <button onclick="sendScore()" class="save-button">📅 Сохранить в лидерборд</button>
   <h2>🏆 Leaderboard</h2>
   <ol id="leaderboard"></ol>
 </body>
