@@ -45,33 +45,35 @@
     const tg = window.Telegram.WebApp;
 
     function sendScore() {
-      const user = tg.initDataUnsafe.user;
-      if (!user) {
-        alert("User info not available — запусти игру через Telegram");
-        return;
-      }
+  const user = tg.initDataUnsafe.user;
+  if (!user) {
+    alert("User info not available — запусти игру через Telegram");
+    return;
+  }
 
-      fetch("https://beer-backend-bqh2.onrender.com/api/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          username: user.username || "",
-          score: level
-        })
-      })
-        .then(r => r.json())
-        .then(data => {
-          console.log("Score saved:", data);
-          tg.setGameScore(level, () => {
-            console.log("Telegram score updated");
-          });
-          loadLeaderboard();
-        })
-        .catch(err => {
-          console.error("Ошибка при сохранении очков:", err);
-        });
-    }
+  fetch("https://beer-backend-bqh2.onrender.com/api/score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: user.id,
+      username: user.username,
+      score: level,
+      chat_id: localStorage.getItem("chat_id"),
+      message_id: localStorage.getItem("message_id")
+    })
+  }).then(r => r.json())
+    .then(data => {
+      console.log(data);
+      tg.setGameScore(level, () => {
+        tg.showPopup({ message: "Счёт сохранён!" });
+      });
+      loadLeaderboard(); // обновить список
+    })
+    .catch(err => {
+      console.error(err);
+      tg.showPopup({ message: "Ошибка при сохранении!" });
+    });
+}
 
     function increment() {
       level++;
