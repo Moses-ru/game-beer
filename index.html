@@ -143,6 +143,7 @@
 <body>
   <div id="achievementPopup"></div>
   <div id="menu">
+    <button onclick="toggleMusic()">🎵</button>
     <button onclick="restartGame()">↻</button>
   </div>
   <h1>⬟ Dublin Tetris</h1>
@@ -164,6 +165,44 @@
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     context.scale(20, 20);
+
+    const sounds = {
+      move: new Audio('sounds/move.mp3'),
+      rotate: new Audio('sounds/rotate.mp3'),
+      drop: new Audio('sounds/drop.mp3'),
+      clear: new Audio('sounds/clear.mp3'),
+      gameover: new Audio('sounds/gameover.mp3'),
+      achievement: new Audio('sounds/achievement.mp3'),
+      restart: new Audio('sounds/restart.mp3'),
+    };
+
+
+sounds.gameover.loop = false; 
+
+const backgroundMusic = new Audio('sounds/background.mp3');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.4;
+
+let musicStarted = false;
+
+function ensureMusicPlaying() {
+  if (!musicStarted) {
+    backgroundMusic.play().catch(e => {
+      console.warn("Фоновая музыка не запустилась автоматически:", e);
+    });
+    musicStarted = true;
+  }
+}
+
+function toggleMusic() {
+  if (backgroundMusic.paused) {
+    backgroundMusic.play();
+  } else {
+    backgroundMusic.pause();
+  }
+}
+
+
 
     const colors = [
       null,
@@ -264,6 +303,7 @@
 
     function arenaSweep() {
       let rowCount = 1;
+      let cleared = false;
       outer: for (let y = arena.length - 1; y > 0; --y) {
         for (let x = 0; x < arena[y].length; ++x) {
           if (arena[y][x] === 0) continue outer;
@@ -271,10 +311,12 @@
         const row = arena.splice(y, 1)[0].fill(0);
         arena.unshift(row);
         ++y;
+        cleared = true;
         const typeScores = { T: 8, O: 7, L: 9, J: 9, I: 10, S: 7, Z: 7 };
         player.score += rowCount * (typeScores[player.type] || 5);
         rowCount *= 2;
       }
+      if (cleared) sounds.clear.play();
     }
 
     function playerReset() {
@@ -288,11 +330,16 @@
     }
 
     function playerMove(dir) {
+  ensureMusicPlaying();
       checkAchievements("move");
       player.pos.x += dir;
-      if (collide(arena, player)) player.pos.x -= dir;
+      if (collide(arena, player)) {
+        player.pos.x -= dir;
+      } else {
+        sounds.move.play();
+      }
     }
-
+    
     function playerDrop() {
       player.pos.y++;
       if (collide(arena, player)) {
@@ -306,12 +353,14 @@
     }
 
     function playerDropFull() {
+  ensureMusicPlaying();
       checkAchievements("drop");
       while (!collide(arena, player)) {
         player.pos.y++;
       }
       player.pos.y--;
       merge(arena, player);
+      sounds.drop.play();
       arenaSweep();
       updateScore();
       playerReset();
@@ -319,6 +368,7 @@
     }
 
     function playerRotate(dir) {
+  ensureMusicPlaying();
       const m = player.matrix;
       for (let y = 0; y < m.length; ++y) {
         for (let x = 0; x < y; ++x) {
@@ -327,15 +377,21 @@
       }
       if (dir > 0) m.forEach(row => row.reverse());
       else m.reverse();
-      if (collide(arena, player)) dir > 0 ? playerRotate(-1) : playerRotate(1);
+      if (!collide(arena, player)) {
+        sounds.rotate.play();
+      } else {
+        dir > 0 ? playerRotate(-1) : playerRotate(1);
+      }
     }
 
     function showGameOver() {
       document.getElementById('finalScore').innerText = 'Your score: ' + player.score;
       document.getElementById('gameOver').style.display = 'block';
+      sounds.gameover.play();
     }
 
     function restartGame() {
+      ensureMusicPlaying();
       checkAchievements("restart");
       document.getElementById('gameOver').style.display = 'none';
       arena.forEach(row => row.fill(0));
@@ -343,6 +399,7 @@
       dropInterval = 500;
       updateScore();
       playerReset();
+      sounds.restart.play();
     }
 
     function updateScore() {
@@ -370,6 +427,7 @@
       const popup = document.getElementById('achievementPopup');
       popup.textContent = `🏅 ${text}`;
       popup.classList.add('show');
+      sounds.achievement.play();
       setTimeout(() => {
         popup.classList.remove('show');
       }, 3000);
