@@ -1,207 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, user-scalable=no" />
-    <title>Telegram Tetris</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script crossorigin src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body {
-        margin: 0;
-        background: #111827;
-        color: white;
-        font-family: sans-serif;
-        touch-action: manipulation;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="text/javascript">
-      const { useState, useEffect, useRef } = React;
-      const { motion } = window["framer-motion"];
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Tetris Mobile Controls</title>
+  <script type="module" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script type="module" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script type="module" src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #111827;
+      color: white;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      touch-action: none;
+      user-select: none;
+    }
+    .grid {
+      position: relative;
+      background-color: #111;
+    }
+    .block {
+      position: absolute;
+      width: 5vw;
+      height: 5vw;
+    }
+    .game-over {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5vw;
+      font-weight: bold;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 1.2em;
+      margin-top: 1em;
+      border: none;
+      border-radius: 1em;
+      background-color: #10b981;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
-      const colors = ["#F87171", "#FBBF24", "#34D399", "#60A5FA", "#A78BFA", "#F472B6"];
-      const ROWS = 20;
-      const COLS = 10;
+  <script type="module">
+    import { motion } from 'https://unpkg.com/framer-motion/dist/framer-motion.mjs';
 
-      const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
-      const initialBlock = () => ({ x: Math.floor(COLS / 2), y: 0, color: getRandomColor() });
+    const { useState, useEffect, useRef } = React;
 
-      function StackGame() {
-        const [blocks, setBlocks] = useState([]);
-        const [current, setCurrent] = useState(initialBlock);
-        const [score, setScore] = useState(0);
-        const [isGameOver, setIsGameOver] = useState(false);
-        const intervalRef = useRef(null);
-        const touchStartX = useRef(null);
-        const touchStartY = useRef(null);
-        const touchStartTime = useRef(null);
-        const holdRef = useRef(false);
+    const colors = ["#F87171", "#FBBF24", "#34D399", "#60A5FA", "#A78BFA", "#F472B6"];
+    const ROWS = 20;
+    const COLS = 10;
 
-        const reset = () => {
-          setBlocks([]);
-          setScore(0);
-          setIsGameOver(false);
-          setCurrent(initialBlock());
-        };
+    const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-        const sendScore = (score) => {
-          const scoreData = JSON.stringify({ score });
-          if (window.parent) window.parent.postMessage(scoreData, "*");
-          if (window.Telegram?.WebApp) window.Telegram.WebApp.sendData(scoreData);
-        };
+    const initialBlock = () => ({
+      x: Math.floor(COLS / 2),
+      y: 0,
+      color: getRandomColor(),
+    });
 
-        const handlePlace = () => {
-          const newBlocks = [...blocks, current];
-          setBlocks(newBlocks);
-          const newScore = score + 1;
-          setScore(newScore);
-          sendScore(newScore);
-          if (newBlocks.some((b) => b.y === 0)) {
-            setIsGameOver(true);
-            clearInterval(intervalRef.current);
+    function StackGame() {
+      const [blocks, setBlocks] = useState([]);
+      const [current, setCurrent] = useState(() => initialBlock());
+      const [score, setScore] = useState(0);
+      const [isGameOver, setIsGameOver] = useState(false);
+      const intervalRef = useRef(null);
+      const touchStartX = useRef(null);
+      const touchStartY = useRef(null);
+      const touchStartTime = useRef(null);
+      const holdRef = useRef(false);
+
+      const reset = () => {
+        setBlocks([]);
+        setScore(0);
+        setIsGameOver(false);
+        setCurrent(() => initialBlock());
+      };
+
+      const handlePlace = () => {
+        const newBlocks = [...blocks, current];
+        setBlocks(newBlocks);
+        setScore(score + 1);
+        if (newBlocks.some(b => b.y === 0)) {
+          setIsGameOver(true);
+          clearInterval(intervalRef.current);
+        } else {
+          setCurrent(() => initialBlock());
+        }
+      };
+
+      const moveDown = () => {
+        setCurrent(prev => {
+          if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
+            return { ...prev, y: prev.y + 1 };
           } else {
-            setCurrent(initialBlock());
+            handlePlace();
+            return prev;
           }
-        };
-
-        const moveDown = () => {
-          setCurrent((prev) => {
-            if (prev.y < ROWS - 1 && !blocks.some((b) => b.x === prev.x && b.y === prev.y + 1)) {
-              return { ...prev, y: prev.y + 1 };
-            } else {
-              handlePlace();
-              return prev;
-            }
-          });
-        };
-
-        useEffect(() => {
-          if (!isGameOver) {
-            intervalRef.current = setInterval(() => {
-              if (!holdRef.current) moveDown();
-            }, 500);
-          }
-          return () => clearInterval(intervalRef.current);
-        }, [blocks, isGameOver]);
-
-        const handleTouchStart = (e) => {
-          const touch = e.touches[0];
-          touchStartX.current = touch.clientX;
-          touchStartY.current = touch.clientY;
-          touchStartTime.current = Date.now();
-          holdRef.current = true;
-        };
-
-        const handleTouchMove = (e) => {
-          const touch = e.touches[0];
-          const dx = touch.clientX - touchStartX.current;
-          const dy = touch.clientY - touchStartY.current;
-
-          if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
-            setCurrent((prev) => ({
-              ...prev,
-              x: Math.max(0, Math.min(COLS - 1, prev.x + (dx > 0 ? 1 : -1))),
-            }));
-            touchStartX.current = touch.clientX;
-          } else if (dy > 30) {
-            moveDown();
-            touchStartY.current = touch.clientY;
-          }
-        };
-
-        const handleTouchEnd = () => {
-          const duration = Date.now() - touchStartTime.current;
-          if (duration < 200) {
-            // tap = rotate
-          } else {
-            const drop = () => {
-              setCurrent((prev) => {
-                if (
-                  prev.y < ROWS - 1 &&
-                  !blocks.some((b) => b.x === prev.x && b.y === prev.y + 1)
-                ) {
-                  return { ...prev, y: prev.y + 1 };
-                } else {
-                  handlePlace();
-                  return prev;
-                }
-              });
-            };
-            const dropInterval = setInterval(() => {
-              drop();
-            }, 30);
-          }
-          holdRef.current = false;
-        };
-
-        return React.createElement("div", {
-          className: "flex flex-col items-center justify-center w-full h-screen select-none",
-          children: [
-            React.createElement("div", {
-              className: "text-2xl font-bold mb-2",
-              children: `Score: ${score}`,
-            }),
-            React.createElement("div", {
-              className: "relative bg-gray-900",
-              style: {
-                width: COLS * 20,
-                height: ROWS * 20,
-                touchAction: "none",
-              },
-              onTouchStart: handleTouchStart,
-              onTouchMove: handleTouchMove,
-              onTouchEnd: handleTouchEnd,
-              children: [
-                ...blocks.map((b, i) =>
-                  React.createElement(motion.div, {
-                    key: i,
-                    className: "absolute w-5 h-5",
-                    style: {
-                      left: b.x * 20,
-                      top: b.y * 20,
-                      backgroundColor: b.color,
-                    },
-                    initial: { scale: 0 },
-                    animate: { scale: 1 },
-                  })
-                ),
-                !isGameOver &&
-                  React.createElement(motion.div, {
-                    className: "absolute w-5 h-5",
-                    style: {
-                      left: current.x * 20,
-                      top: current.y * 20,
-                      backgroundColor: current.color,
-                    },
-                    initial: { scale: 0 },
-                    animate: { scale: 1 },
-                  }),
-                isGameOver &&
-                  React.createElement("div", {
-                    className:
-                      "absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center text-white text-xl font-bold",
-                    children: "Game Over",
-                  }),
-              ],
-            }),
-            isGameOver &&
-              React.createElement("button", {
-                onClick: reset,
-                className: "mt-4 px-4 py-2 bg-green-500 text-white rounded-xl shadow-lg",
-                children: "Restart",
-              }),
-          ],
         });
-      }
+      };
 
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(React.createElement(StackGame));
-    </script>
-  </body>
+      useEffect(() => {
+        if (!isGameOver) {
+          intervalRef.current = setInterval(() => {
+            if (!holdRef.current) moveDown();
+          }, 500);
+        }
+        return () => clearInterval(intervalRef.current);
+      }, [blocks, isGameOver]);
+
+      const handleTouchStart = (e) => {
+        const touch = e.touches[0];
+        touchStartX.current = touch.clientX;
+        touchStartY.current = touch.clientY;
+        touchStartTime.current = Date.now();
+        holdRef.current = true;
+      };
+
+      const handleTouchMove = (e) => {
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchStartX.current;
+        const dy = touch.clientY - touchStartY.current;
+
+        if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+          setCurrent(prev => ({ ...prev, x: Math.max(0, Math.min(COLS - 1, prev.x + (dx > 0 ? 1 : -1))) }));
+          touchStartX.current = touch.clientX;
+        } else if (dy > 30) {
+          moveDown();
+          touchStartY.current = touch.clientY;
+        }
+      };
+
+      const handleTouchEnd = () => {
+        const duration = Date.now() - touchStartTime.current;
+        if (duration < 200) {
+          // tap = rotate (noop)
+        } else {
+          let dropping = true;
+          const dropInterval = setInterval(() => {
+            setCurrent(prev => {
+              if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
+                return { ...prev, y: prev.y + 1 };
+              } else {
+                clearInterval(dropInterval);
+                handlePlace();
+                return prev;
+              }
+            });
+          }, 30);
+        }
+        holdRef.current = false;
+      };
+
+      return React.createElement("div", {
+        className: "game-container",
+        onTouchStart: handleTouchStart,
+        onTouchMove: handleTouchMove,
+        onTouchEnd: handleTouchEnd
+      },
+        React.createElement("div", { style: { fontSize: "5vw", marginBottom: "2vw" } }, `Score: ${score}`),
+        React.createElement("div", {
+          className: "grid",
+          style: { width: `${COLS * 5}vw`, height: `${ROWS * 5}vw` }
+        },
+          blocks.map((block, i) =>
+            React.createElement("div", {
+              key: i,
+              className: "block",
+              style: {
+                left: `${block.x * 5}vw`,
+                top: `${block.y * 5}vw`,
+                backgroundColor: block.color,
+              }
+            })
+          ),
+          !isGameOver && React.createElement("div", {
+            className: "block",
+            style: {
+              left: `${current.x * 5}vw`,
+              top: `${current.y * 5}vw`,
+              backgroundColor: current.color,
+            }
+          }),
+          isGameOver && React.createElement("div", { className: "game-over" }, "Game Over")
+        ),
+        isGameOver && React.createElement("button", { onClick: reset }, "Restart")
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(StackGame));
+  </script>
+</body>
 </html>
