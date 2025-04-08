@@ -11,38 +11,43 @@
       background-color: #0f172a;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #f1f5f9;
+      height: 100vh;
+      overflow: hidden;
+    }
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100%;
+      justify-content: center;
     }
     h1 {
-      margin-top: 1rem;
+      margin: 0.5rem;
       color: #fbbf24;
+      font-size: 1.5rem;
     }
     canvas {
       border: 5px solid #fbbf24;
       background-color: #1e293b;
       width: 90vw;
-      max-width: 400px;
+      max-width: 320px;
       height: auto;
     }
     #score {
-      font-size: 1.2rem;
-      margin: 0.5rem;
+      font-size: 1rem;
+      margin: 0.3rem;
     }
     .controls {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      margin: 1rem 0;
-      gap: 0.5rem;
-      max-width: 400px;
+      gap: 0.3rem;
       width: 90vw;
+      max-width: 320px;
+      margin-top: 0.5rem;
     }
     .controls button {
-      padding: 1rem;
-      font-size: 1.5rem;
+      padding: 0.8rem;
+      font-size: 1.2rem;
       background-color: #3b82f6;
       color: white;
       border: none;
@@ -242,7 +247,7 @@
     }
 
     let dropCounter = 0;
-    let dropInterval = 400; // faster falling
+    let dropInterval = 400;
     let lastTime = 0;
 
     function update(time = 0) {
