@@ -45,17 +45,32 @@
     const tg = window.Telegram.WebApp;
 
     function sendScore() {
+      const user = tg.initDataUnsafe.user;
+      if (!user) {
+        alert("User info not available — запусти игру через Telegram");
+        return;
+      }
+
       fetch("https://beer-backend-bqh2.onrender.com/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: tg.initDataUnsafe.user.id,
-          username: tg.initDataUnsafe.user.username,
-          score: level,
-          chat_id: localStorage.getItem("chat_id"),
-          message_id: localStorage.getItem("message_id")
+          user_id: user.id,
+          username: user.username || "",
+          score: level
         })
-      }).then(r => r.json()).then(console.log).catch(console.error);
+      })
+        .then(r => r.json())
+        .then(data => {
+          console.log("Score saved:", data);
+          tg.setGameScore(level, () => {
+            console.log("Telegram score updated");
+          });
+          loadLeaderboard();
+        })
+        .catch(err => {
+          console.error("Ошибка при сохранении очков:", err);
+        });
     }
 
     function increment() {
@@ -79,13 +94,6 @@
 
     window.onload = function () {
       Telegram.WebApp.ready();
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has("chat_id")) {
-        localStorage.setItem("chat_id", urlParams.get("chat_id"));
-      }
-      if (urlParams.has("message_id")) {
-        localStorage.setItem("message_id", urlParams.get("message_id"));
-      }
       loadLeaderboard();
     };
   </script>
@@ -94,7 +102,7 @@
   <h1>🍺 Beer Clicker</h1>
   <button onclick="increment()">Click Me!</button>
   <p>Score: <span id="score">0</span></p>
-  <button onclick="sendScore()"class="save-button">💾 Сохранить в лидерборд</button>
+  <button onclick="sendScore()" class="save-button">💾 Сохранить в лидерборд</button>
   <h2>🏆 Leaderboard</h2>
   <ol id="leaderboard"></ol>
 </body>
