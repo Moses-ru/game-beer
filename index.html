@@ -97,6 +97,12 @@
 
     window.onload = function () {
       Telegram.WebApp.ready();
+
+      if (!Telegram.WebApp.initDataUnsafe?.user) {
+        alert("❗ Запусти игру через Telegram, иначе нельзя сохранить результат.");
+        return;
+      }
+
       loadLeaderboard();
     };
   </script>
