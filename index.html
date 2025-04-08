@@ -1,211 +1,273 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Tetris Mobile Controls</title>
-  <script type="module" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script type="module" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script type="module" src="https://unpkg.com/framer-motion/dist/framer-motion.umd.js"></script>
+  <meta charset="UTF-8">
+  <title>Tetris</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: #111827;
-      color: white;
-      font-family: sans-serif;
-      overflow: hidden;
+      background-color: #0f172a;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
     }
-    .game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      touch-action: none;
-      user-select: none;
+    canvas {
+      background: #1e293b;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #fbbf24;
+      width: 90vw;
+      height: auto;
+      max-height: 80vh;
     }
-    .grid {
-      position: relative;
-      background-color: #111;
+    h1 {
+      color: #fbbf24;
+      margin: 0.5rem;
     }
-    .block {
-      position: absolute;
-      width: 5vw;
-      height: 5vw;
+    #score {
+      font-size: 1.2rem;
+      margin: 0.5rem;
     }
-    .game-over {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 5vw;
-      font-weight: bold;
+    #gameOver {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1e293b;
+      padding: 2rem;
+      border: 2px solid #fbbf24;
+      border-radius: 1rem;
+      z-index: 10;
     }
-    button {
-      padding: 1em 2em;
-      font-size: 1.2em;
-      margin-top: 1em;
+    #gameOver button {
+      background-color: #fbbf24;
+      color: #1e293b;
       border: none;
-      border-radius: 1em;
-      background-color: #10b981;
-      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <h1>⬟ Tetris</h1>
+  <canvas id="tetris" width="240" height="400"></canvas>
+  <div id="score">Score: 0</div>
+  <div id="gameOver">
+    <div id="finalScore">Your score: 0</div>
+    <button onclick="restartGame()">Restart</button>
+  </div>
 
-  <script type="module">
-    import { motion } from 'https://unpkg.com/framer-motion/dist/framer-motion.mjs';
+  <script>
+    window.Telegram?.WebApp?.expand();
 
-    const { useState, useEffect, useRef } = React;
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
 
-    const colors = ["#F87171", "#FBBF24", "#34D399", "#60A5FA", "#A78BFA", "#F472B6"];
-    const ROWS = 20;
-    const COLS = 10;
+    context.scale(20, 20);
 
-    const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+    let startX = 0;
+    let startY = 0;
+    let isTap = false;
 
-    const initialBlock = () => ({
-      x: Math.floor(COLS / 2),
-      y: 0,
-      color: getRandomColor(),
+    canvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      isTap = true;
+      setTimeout(() => {
+        if (isTap) {
+          playerDrop();
+        }
+      }, 500);
     });
 
-    function StackGame() {
-      const [blocks, setBlocks] = useState([]);
-      const [current, setCurrent] = useState(() => initialBlock());
-      const [score, setScore] = useState(0);
-      const [isGameOver, setIsGameOver] = useState(false);
-      const intervalRef = useRef(null);
-      const touchStartX = useRef(null);
-      const touchStartY = useRef(null);
-      const touchStartTime = useRef(null);
-      const holdRef = useRef(false);
+    canvas.addEventListener('touchmove', (e) => {
+      isTap = false;
+    });
 
-      const reset = () => {
-        setBlocks([]);
-        setScore(0);
-        setIsGameOver(false);
-        setCurrent(() => initialBlock());
-      };
+    canvas.addEventListener('touchend', (e) => {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
 
-      const handlePlace = () => {
-        const newBlocks = [...blocks, current];
-        setBlocks(newBlocks);
-        setScore(score + 1);
-        if (newBlocks.some(b => b.y === 0)) {
-          setIsGameOver(true);
-          clearInterval(intervalRef.current);
-        } else {
-          setCurrent(() => initialBlock());
-        }
-      };
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30) playerMove(1);
+        else if (dx < -30) playerMove(-1);
+      } else {
+        if (isTap) playerRotate(1);
+      }
+    });
 
-      const moveDown = () => {
-        setCurrent(prev => {
-          if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
-            return { ...prev, y: prev.y + 1 };
-          } else {
-            handlePlace();
-            return prev;
-          }
-        });
-      };
-
-      useEffect(() => {
-        if (!isGameOver) {
-          intervalRef.current = setInterval(() => {
-            if (!holdRef.current) moveDown();
-          }, 500);
-        }
-        return () => clearInterval(intervalRef.current);
-      }, [blocks, isGameOver]);
-
-      const handleTouchStart = (e) => {
-        const touch = e.touches[0];
-        touchStartX.current = touch.clientX;
-        touchStartY.current = touch.clientY;
-        touchStartTime.current = Date.now();
-        holdRef.current = true;
-      };
-
-      const handleTouchMove = (e) => {
-        const touch = e.touches[0];
-        const dx = touch.clientX - touchStartX.current;
-        const dy = touch.clientY - touchStartY.current;
-
-        if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
-          setCurrent(prev => ({ ...prev, x: Math.max(0, Math.min(COLS - 1, prev.x + (dx > 0 ? 1 : -1))) }));
-          touchStartX.current = touch.clientX;
-        } else if (dy > 30) {
-          moveDown();
-          touchStartY.current = touch.clientY;
-        }
-      };
-
-      const handleTouchEnd = () => {
-        const duration = Date.now() - touchStartTime.current;
-        if (duration < 200) {
-          // tap = rotate (noop)
-        } else {
-          let dropping = true;
-          const dropInterval = setInterval(() => {
-            setCurrent(prev => {
-              if (prev.y < ROWS - 1 && !blocks.some(b => b.x === prev.x && b.y === prev.y + 1)) {
-                return { ...prev, y: prev.y + 1 };
-              } else {
-                clearInterval(dropInterval);
-                handlePlace();
-                return prev;
-              }
-            });
-          }, 30);
-        }
-        holdRef.current = false;
-      };
-
-      return React.createElement("div", {
-        className: "game-container",
-        onTouchStart: handleTouchStart,
-        onTouchMove: handleTouchMove,
-        onTouchEnd: handleTouchEnd
-      },
-        React.createElement("div", { style: { fontSize: "5vw", marginBottom: "2vw" } }, `Score: ${score}`),
-        React.createElement("div", {
-          className: "grid",
-          style: { width: `${COLS * 5}vw`, height: `${ROWS * 5}vw` }
-        },
-          blocks.map((block, i) =>
-            React.createElement("div", {
-              key: i,
-              className: "block",
-              style: {
-                left: `${block.x * 5}vw`,
-                top: `${block.y * 5}vw`,
-                backgroundColor: block.color,
-              }
-            })
-          ),
-          !isGameOver && React.createElement("div", {
-            className: "block",
-            style: {
-              left: `${current.x * 5}vw`,
-              top: `${current.y * 5}vw`,
-              backgroundColor: current.color,
-            }
-          }),
-          isGameOver && React.createElement("div", { className: "game-over" }, "Game Over")
-        ),
-        isGameOver && React.createElement("button", { onClick: reset }, "Restart")
-      );
+    function showGameOver() {
+      document.getElementById('finalScore').innerText = 'Your score: ' + player.score;
+      document.getElementById('gameOver').style.display = 'block';
     }
 
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(StackGame));
+    function restartGame() {
+      document.getElementById('gameOver').style.display = 'none';
+      arena.forEach(row => row.fill(0));
+      player.score = 0;
+      updateScore();
+      playerReset();
+    }
+
+    function arenaSweep() {
+      let rowCount = 1;
+      outer: for (let y = arena.length - 1; y > 0; --y) {
+        for (let x = 0; x < arena[y].length; ++x) {
+          if (arena[y][x] === 0) continue outer;
+        }
+        const row = arena.splice(y, 1)[0].fill(0);
+        arena.unshift(row);
+        ++y;
+        const typeScores = {
+          T: 8, O: 7, L: 9, J: 9, I: 10, S: 7, Z: 7
+        };
+        player.score += rowCount * (typeScores[player.type] || 5);
+        rowCount *= 2;
+      }
+    }
+
+    function collide(arena, player) {
+      const [m, o] = [player.matrix, player.pos];
+      for (let y = 0; y < m.length; ++y) {
+        for (let x = 0; x < m[y].length; ++x) {
+          if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+        }
+      }
+      return false;
+    }
+
+    function createMatrix(w, h) {
+      const matrix = [];
+      while (h--) matrix.push(new Array(w).fill(0));
+      return matrix;
+    }
+
+    function createPiece(type) {
+      const pieces = {
+        T: [[0,0,0],[1,1,1],[0,1,0]],
+        O: [[2,2],[2,2]],
+        L: [[0,3,0],[0,3,0],[0,3,3]],
+        J: [[0,4,0],[0,4,0],[4,4,0]],
+        I: [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]],
+        S: [[0,6,6],[6,6,0],[0,0,0]],
+        Z: [[7,7,0],[0,7,7],[0,0,0]]
+      };
+      return pieces[type];
+    }
+
+    function drawMatrix(matrix, offset) {
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+            context.fillStyle = colors[value];
+            context.fillRect(x + offset.x, y + offset.y, 1, 1);
+          }
+        });
+      });
+    }
+
+    function draw() {
+      context.fillStyle = '#0f172a';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawMatrix(arena, {x: 0, y: 0});
+      drawMatrix(player.matrix, player.pos);
+    }
+
+    function merge(arena, player) {
+      player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+        });
+      });
+    }
+
+    function playerDrop() {
+      player.pos.y++;
+      if (collide(arena, player)) {
+        player.pos.y--;
+        merge(arena, player);
+        playerReset();
+        arenaSweep();
+        updateScore();
+      }
+      dropCounter = 0;
+    }
+
+    function playerMove(dir) {
+      player.pos.x += dir;
+      if (collide(arena, player)) player.pos.x -= dir;
+    }
+
+    function playerReset() {
+      const pieces = 'TJLOSZI';
+      const type = pieces[Math.random() * pieces.length | 0];
+      player.matrix = createPiece(type);
+      player.type = type;
+      player.pos.y = 0;
+      player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+      if (collide(arena, player)) {
+        fetch('https://your-backend-url/api/save-score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'unknown',
+            score: player.score
+          })
+        });
+        showGameOver();
+      }
+    }
+
+    function playerRotate(dir) {
+      const m = player.matrix;
+      for (let y = 0; y < m.length; ++y) {
+        for (let x = 0; x < y; ++x) {
+          [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+        }
+      }
+      if (dir > 0) m.forEach(row => row.reverse());
+      else m.reverse();
+      if (collide(arena, player)) dir > 0 ? playerRotate(-1) : playerRotate(1);
+    }
+
+    function update(time = 0) {
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      dropCounter += deltaTime;
+      if (dropCounter > dropInterval) playerDrop();
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    function updateScore() {
+      document.getElementById('score').innerText = 'Score: ' + player.score;
+    }
+
+    const colors = [null, '#f87171','#facc15','#34d399','#60a5fa','#f472b6','#4ade80','#c084fc'];
+    const arena = createMatrix(12, 20);
+    const player = { pos: {x:0, y:0}, matrix: null, score: 0, type: null };
+    let dropCounter = 0;
+    let dropInterval = 700;
+    let lastTime = 0;
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft') playerMove(-1);
+      else if (event.key === 'ArrowRight') playerMove(1);
+      else if (event.key === 'ArrowDown') playerDrop();
+      else if (event.key === 'ArrowUp') playerRotate(1);
+    });
+
+    playerReset();
+    updateScore();
+    update();
   </script>
 </body>
 </html>
