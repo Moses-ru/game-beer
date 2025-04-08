@@ -196,7 +196,7 @@ sounds.gameover.loop = false;
 
 const backgroundMusic = new Audio('sounds/background.mp3');
 backgroundMusic.loop = true;
-backgroundMusic.volume = 0.1;
+backgroundMusic.volume = 0.4;
 
 let musicStarted = false;
 
@@ -318,7 +318,8 @@ function toggleMusic() {
 
     function arenaSweep() {
       let rowCount = 1;
-      let cleared = false;
+      let clearedRows = 0;
+
       outer: for (let y = arena.length - 1; y > 0; --y) {
         for (let x = 0; x < arena[y].length; ++x) {
           if (arena[y][x] === 0) continue outer;
@@ -326,12 +327,29 @@ function toggleMusic() {
         const row = arena.splice(y, 1)[0].fill(0);
         arena.unshift(row);
         ++y;
-        cleared = true;
+        clearedRows++;
         const typeScores = { T: 8, O: 7, L: 9, J: 9, I: 10, S: 7, Z: 7 };
         player.score += rowCount * (typeScores[player.type] || 5);
         rowCount *= 2;
       }
-      if (cleared) sounds.clear.play();
+
+      if (clearedRows > 0) {
+        sounds.clear.play();
+
+        if (clearedRows >= 3 && !achievements.tripleClear) {
+          achievements.tripleClear = true;
+          showAchievement("Три в ряд!");
+        }
+
+        achievements.cleanStreak++;
+      } else {
+        achievements.cleanStreak = 0;
+      }
+
+      if (achievements.cleanStreak >= 10 && !achievements.cleanMaster) {
+        achievements.cleanMaster = true;
+        showAchievement("Без ошибок!");
+      }
     }
 
     function playerReset() {
@@ -397,6 +415,12 @@ function toggleMusic() {
       } else {
         dir > 0 ? playerRotate(-1) : playerRotate(1);
       }
+
+      achievements.spinCount++;
+      if (achievements.spinCount >= 15 && !achievements.spinMaster) {
+        achievements.spinMaster = true;
+        showAchievement("Мастер вращения!");
+      }
     }
 
     function showGameOver() {
@@ -406,6 +430,10 @@ function toggleMusic() {
     }
 
     function restartGame() {
+      if (player.score < 50 && !achievements.earlyRestart) {
+        achievements.earlyRestart = true;
+        showAchievement("Ранний рестарт!");
+      }
       ensureMusicPlaying();
       checkAchievements("restart");
       document.getElementById('gameOver').style.display = 'none';
@@ -418,6 +446,13 @@ function toggleMusic() {
     }
 
     function updateScore() {
+      if (player.score >= 100 && !achievements.quickStart) {
+        const elapsed = performance.now() / 1000;
+        if (elapsed < 30) {
+          achievements.quickStart = true;
+          showAchievement("Быстрый старт!");
+        }
+      }
       checkAchievements();
       document.getElementById('score').innerText = 'СЧЁТ: ' + player.score;
       if (player.score && player.score % 50 === 0 && dropInterval > 100) {
@@ -436,6 +471,13 @@ function toggleMusic() {
       score500: false,
       usedDrop: false,
       restarted: false,
+      tripleClear: false,
+      cleanStreak: 0,
+      cleanMaster: false,
+      spinCount: 0,
+      spinMaster: false,
+      earlyRestart: false,
+      quickStart: false,
     };
 
     function showAchievement(text) {
