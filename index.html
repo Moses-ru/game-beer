@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Тетрис</title>
+  <title>Tetris</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     html, body {
@@ -47,10 +47,11 @@
       background-color: #fbbf24;
       color: #1e293b;
       border: none;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
+      padding: 1rem;
+      font-size: 1.5rem;
       border-radius: 0.5rem;
       cursor: pointer;
+      flex: 1;
     }
     #menu {
       position: absolute;
@@ -62,6 +63,8 @@
       display: flex;
       justify-content: center;
       gap: 0.5rem;
+      max-width: 90vw;
+      margin: 1rem auto 0;
     }
   </style>
 </head>
@@ -69,9 +72,9 @@
   <div id="menu">
     <button onclick="restartGame()">*️⃣</button>
   </div>
-  <h1>⬟ Дублин Тетрис</h1>
+  <h1>⬟ Tetris</h1>
   <canvas id="tetris" width="240" height="400"></canvas>
-  <div id="score">Счёт: 0</div>
+  <div id="score">Score: 0</div>
   <div class="controls">
     <button onclick="playerMove(-1)">⬅️</button>
     <button onclick="playerDrop()">⬇️</button>
@@ -79,8 +82,8 @@
     <button onclick="playerRotate(1)">🔄</button>
   </div>
   <div id="gameOver">
-    <div id="finalScore">Счёт: 0</div>
-    <button onclick="restartGame()">Рестарт</button>
+    <div id="finalScore">Your score: 0</div>
+    <button onclick="restartGame()">Restart</button>
   </div>
 
   <script>
