@@ -236,26 +236,18 @@ async function saveAchievements() {
 }
 
 async function loadAchievements() {
-  if (!window.Telegram?.WebApp?.initData) {
-    console.error("Telegram WebApp not initialized");
-    return {};
-  }
-
+  if (!window.Telegram?.WebApp?.initData) return;
+  
   try {
-    const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+    const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "GET",
       headers: {
-        "X-Telegram-Bot-InitData": Telegram.WebApp.initData,
-        "Content-Type": "application/json"
+        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
       }
     });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
+    return await res.json();
   } catch (e) {
-    console.error("Failed to load achievements:", e);
+    console.error("Error loading achievements:", e);
     return {};
   }
 }
