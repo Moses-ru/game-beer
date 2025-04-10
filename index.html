@@ -199,7 +199,7 @@ backgroundMusic.loop = true;
 backgroundMusic.volume = 0.4;
 
 let musicStarted = false;
-    
+
 function ensureMusicPlaying() {
   if (!musicStarted) {
     backgroundMusic.play().catch(e => {
@@ -237,7 +237,6 @@ async function saveAchievements() {
 
 async function loadAchievements() {
   if (!window.Telegram?.WebApp?.initData) return;
-  
   try {
     const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "GET",
@@ -245,13 +244,19 @@ async function loadAchievements() {
         "X-Telegram-Bot-InitData": Telegram.WebApp.initData
       }
     });
-    return await res.json();
+    const data = await res.json();
+    if (typeof data === "object") {
+      for (let key in achievements) {
+        if (data.hasOwnProperty(key)) {
+          achievements[key] = data[key];
+        }
+      }
+    }
   } catch (e) {
-    console.error("Error loading achievements:", e);
-    return {};
+    console.warn("Ошибка загрузки ачивок:", e);
   }
 }
-    
+
 document.addEventListener('DOMContentLoaded', () => {
   if (window.Telegram?.WebApp?.initData) {
     Telegram.WebApp.expand();
@@ -599,11 +604,6 @@ function toggleMusic() {
       update();
     }
 
-fetch('https://beer-backend-bqh2.onrender.com/debug_auth?initData=' + encodeURIComponent(initData))
-  .then(res => res.json())
-  .then(console.log)
-  .catch(console.error);
-    
 startGame();
   </script>
 </body>
