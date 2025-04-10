@@ -191,92 +191,80 @@
       restart: new Audio('sounds/restart.mp3'),
     };
 
+    sounds.gameover.loop = false; 
 
-sounds.gameover.loop = false; 
+    const backgroundMusic = new Audio('sounds/background.mp3');
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0.4;
 
-const backgroundMusic = new Audio('sounds/background.mp3');
-backgroundMusic.loop = true;
-backgroundMusic.volume = 0.4;
+    let musicStarted = false;
 
-let musicStarted = false;
-
-function ensureMusicPlaying() {
-  if (!musicStarted) {
-    backgroundMusic.play().catch(e => {
-      console.warn("Фоновая музыка не запустилась автоматически:", e);
-    });
-    musicStarted = true;
-  }
-}
-    
-async function saveAchievements() {
-  if (!window.Telegram?.WebApp?.initData) {
-    console.warn("Telegram WebApp не инициализирован");
-    return;
-  }
-  try {
-    const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
-      },
-      body: JSON.stringify({
-        user_id: Telegram.WebApp.initDataUnsafe?.user?.id,
-        achievements
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-  } catch (e) {
-    console.error("Ошибка сохранения ачивок:", e);
-  }
-}
-
-async function loadAchievements() {
-  if (!window.Telegram?.WebApp?.initData) return;
-  try {
-    const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
-      method: "GET",
-      headers: {
-        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+    function ensureMusicPlaying() {
+      if (!musicStarted) {
+        backgroundMusic.play().catch(e => {
+          console.warn("Фоновая музыка не запустилась автоматически:", e);
+        });
+        musicStarted = true;
       }
-    });
-    const data = await res.json();
-    if (typeof data === "object") {
-      for (let key in achievements) {
-        if (data.hasOwnProperty(key)) {
-          achievements[key] = data[key];
+    }
+    
+    async function saveAchievements() {
+      if (!window.Telegram?.WebApp?.initData) {
+        console.warn("Telegram WebApp не инициализирован");
+        return;
+      }
+      try {
+        const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+          },
+          body: JSON.stringify({
+            user_id: Telegram.WebApp.initDataUnsafe?.user?.id,
+            achievements
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+      } catch (e) {
+        console.error("Ошибка сохранения ачивок:", e);
       }
     }
-  } catch (e) {
-    console.warn("Ошибка загрузки ачивок:", e);
-  }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Telegram?.WebApp?.initData) {
-    Telegram.WebApp.expand();
-    startGame();
-  } else {
-    console.warn("Запущено вне Telegram WebApp");
-    // Можно добавить fallback-режим
-    startGame();
-  }
-});
+    async function loadAchievements() {
+      if (!window.Telegram?.WebApp?.initData) return;
+      try {
+        const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+          method: "GET",
+          headers: {
+            "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+          }
+        });
+        const data = await res.json();
+        if (typeof data === "object") {
+          for (let key in achievements) {
+            if (data.hasOwnProperty(key)) {
+              achievements[key] = data[key];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Ошибка загрузки ачивок:", e);
+      }
+    }
 
-function toggleMusic() {
-  if (backgroundMusic.paused) {
-    backgroundMusic.play();
-  } else {
-    backgroundMusic.pause();
-  }
-}
-
-
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.Telegram?.WebApp?.initData) {
+        Telegram.WebApp.expand();
+        startGame();
+      } else {
+        console.warn("Запущено вне Telegram WebApp");
+        startGame();
+      }
+    });
 
     const colors = [
       null,
@@ -418,11 +406,19 @@ function toggleMusic() {
       player.type = type;
       player.pos.y = 0;
       player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+      
+      // Увеличиваем счетчик блоков и обновляем скорость
+      blocksPlaced++;
+      dropInterval = initialDropInterval * Math.pow(0.99, blocksPlaced); // Уменьшаем на 2% с каждым блоком
+      
+      // Устанавливаем минимальную скорость
+      if (dropInterval < 100) dropInterval = 100;
+      
       if (collide(arena, player)) showGameOver();
     }
 
     function playerMove(dir) {
-  ensureMusicPlaying();
+      ensureMusicPlaying();
       checkAchievements("move");
       player.pos.x += dir;
       if (collide(arena, player)) {
@@ -445,7 +441,7 @@ function toggleMusic() {
     }
 
     function playerDropFull() {
-  ensureMusicPlaying();
+      ensureMusicPlaying();
       checkAchievements("drop");
       while (!collide(arena, player)) {
         player.pos.y++;
@@ -460,7 +456,7 @@ function toggleMusic() {
     }
 
     function playerRotate(dir) {
-  ensureMusicPlaying();
+      ensureMusicPlaying();
       const m = player.matrix;
       for (let y = 0; y < m.length; ++y) {
         for (let x = 0; x < y; ++x) {
@@ -498,7 +494,8 @@ function toggleMusic() {
       document.getElementById('gameOver').style.display = 'none';
       arena.forEach(row => row.fill(0));
       player.score = 0;
-      dropInterval = 500;
+      blocksPlaced = 0; // Сбрасываем счетчик блоков
+      dropInterval = initialDropInterval; // Восстанавливаем начальную скорость
       updateScore();
       playerReset();
       sounds.restart.play();
@@ -514,15 +511,14 @@ function toggleMusic() {
       }
       checkAchievements();
       document.getElementById('score').innerText = 'СЧЁТ: ' + player.score;
-      if (player.score && player.score % 50 === 0 && dropInterval > 100) {
-        dropInterval = 500 - Math.min(400, Math.floor(player.score / 50) * 50);
-      }
     }
 
     let arena = createMatrix(12, 20);
     let player = { pos: {x: 0, y: 0}, matrix: null, score: 0, type: null };
     let dropCounter = 0;
-    let dropInterval = 500;
+    const initialDropInterval = 500;
+    let dropInterval = initialDropInterval;
+    let blocksPlaced = 0;
 
     const achievements = {
       firstBlock: false,
@@ -539,8 +535,6 @@ function toggleMusic() {
       quickStart: false,
     };
 
-
-
     function showAchievement(text) {
       const popup = document.getElementById('achievementPopup');
       popup.textContent = `🏅 ${text}`;
@@ -555,7 +549,8 @@ function toggleMusic() {
       if (type === "move" && !achievements.firstBlock) {
         achievements.firstBlock = true;
         showAchievement("Первый блок!");
-  saveAchievements();}
+        saveAchievements();
+      }
 
       if (type === "drop" && !achievements.usedDrop) {
         achievements.usedDrop = true;
@@ -577,7 +572,6 @@ function toggleMusic() {
         showAchievement("Мастер 500!");
       }
     }
-
 
     let lastTime = 0;
 
@@ -604,7 +598,7 @@ function toggleMusic() {
       update();
     }
 
-startGame();
+    startGame();
   </script>
 </body>
 </html>
