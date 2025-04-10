@@ -200,6 +200,11 @@ backgroundMusic.volume = 0.4;
 
 let musicStarted = false;
 
+fetch('https://beer-backend-bqh2.onrender.com/debug_auth?initData=' + encodeURIComponent(initData))
+  .then(res => res.json())
+  .then(console.log)
+  .catch(console.error);
+    
 function ensureMusicPlaying() {
   if (!musicStarted) {
     backgroundMusic.play().catch(e => {
