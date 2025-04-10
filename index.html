@@ -236,27 +236,29 @@ async function saveAchievements() {
 }
 
 async function loadAchievements() {
-  if (!window.Telegram?.WebApp?.initData) return;
-  
-  console.log("Original initData:", Telegram.WebApp.initData); // Добавьте это
-  
+  if (!window.Telegram?.WebApp?.initData) {
+    console.warn("Telegram WebApp not initialized");
+    return {};
+  }
+
+  console.log("Original initData:", Telegram.WebApp.initData);
+
   try {
-    const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+    const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "GET",
       headers: {
-        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+        "X-Telegram-Bot-InitData": Telegram.WebApp.initData,
+        "X-Request-Type": "telegram-webapp"
       }
     });
-    const data = await res.json();
-    if (typeof data === "object") {
-      for (let key in achievements) {
-        if (data.hasOwnProperty(key)) {
-          achievements[key] = data[key];
-        }
-      }
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return await response.json();
   } catch (e) {
-    console.warn("Ошибка загрузки ачивок:", e);
+    console.error("Error loading achievements:", e);
+    return {};
   }
 }
 
