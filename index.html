@@ -237,6 +237,9 @@ async function saveAchievements() {
 
 async function loadAchievements() {
   if (!window.Telegram?.WebApp?.initData) return;
+  
+  console.log("Original initData:", Telegram.WebApp.initData); // Добавьте это
+  
   try {
     const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "GET",
