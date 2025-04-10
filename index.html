@@ -208,6 +208,48 @@ function ensureMusicPlaying() {
     musicStarted = true;
   }
 }
+async function saveAchievements() {
+  if (!window.Telegram?.WebApp?.initData) return;
+  try {
+    await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+      },
+      body: JSON.stringify({
+        user_id: Telegram.WebApp.initDataUnsafe?.user?.id,
+        achievements
+      })
+    });
+  } catch (e) {
+    console.warn("Ошибка сохранения ачивок:", e);
+  }
+}
+
+async function loadAchievements() {
+  if (!window.Telegram?.WebApp?.initData) return;
+  try {
+    const res = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+      method: "GET",
+      headers: {
+        "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+      }
+    });
+    const data = await res.json();
+    if (typeof data === "object") {
+      for (let key in achievements) {
+        if (data.hasOwnProperty(key)) {
+          achievements[key] = data[key];
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Ошибка загрузки ачивок:", e);
+  }
+}
+
+
 
 function toggleMusic() {
   if (backgroundMusic.paused) {
@@ -480,6 +522,8 @@ function toggleMusic() {
       quickStart: false,
     };
 
+
+
     function showAchievement(text) {
       const popup = document.getElementById('achievementPopup');
       popup.textContent = `🏅 ${text}`;
@@ -494,7 +538,7 @@ function toggleMusic() {
       if (type === "move" && !achievements.firstBlock) {
         achievements.firstBlock = true;
         showAchievement("Первый блок!");
-      }
+  saveAchievements();}
 
       if (type === "drop" && !achievements.usedDrop) {
         achievements.usedDrop = true;
@@ -536,9 +580,19 @@ function toggleMusic() {
       else if (event.key === 'ArrowUp') playerRotate(1);
     });
 
-    playerReset();
-    updateScore();
-    update();
+    startGame();
+    startGame();
+    
+
+
+    async function startGame() {
+      await loadAchievements();
+      playerReset();
+      updateScore();
+      update();
+    }
+
+startGame();
   </script>
 </body>
 </html>
