@@ -237,18 +237,16 @@ async function saveAchievements() {
 
 async function loadAchievements() {
   if (!window.Telegram?.WebApp?.initData) {
-    console.warn("Telegram WebApp not initialized");
+    console.error("Telegram WebApp not initialized");
     return {};
   }
-
-  console.log("Original initData:", Telegram.WebApp.initData);
 
   try {
     const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "GET",
       headers: {
         "X-Telegram-Bot-InitData": Telegram.WebApp.initData,
-        "X-Request-Type": "telegram-webapp"
+        "Content-Type": "application/json"
       }
     });
     
@@ -257,11 +255,11 @@ async function loadAchievements() {
     }
     return await response.json();
   } catch (e) {
-    console.error("Error loading achievements:", e);
+    console.error("Failed to load achievements:", e);
     return {};
   }
 }
-
+    
 document.addEventListener('DOMContentLoaded', () => {
   if (window.Telegram?.WebApp?.initData) {
     Telegram.WebApp.expand();
