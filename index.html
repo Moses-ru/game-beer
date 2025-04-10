@@ -208,10 +208,14 @@ function ensureMusicPlaying() {
     musicStarted = true;
   }
 }
+    
 async function saveAchievements() {
-  if (!window.Telegram?.WebApp?.initData) return;
+  if (!window.Telegram?.WebApp?.initData) {
+    console.warn("Telegram WebApp не инициализирован");
+    return;
+  }
   try {
-    await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
+    const response = await fetch("https://beer-backend-bqh2.onrender.com/api/achievements", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -222,8 +226,12 @@ async function saveAchievements() {
         achievements
       })
     });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
   } catch (e) {
-    console.warn("Ошибка сохранения ачивок:", e);
+    console.error("Ошибка сохранения ачивок:", e);
   }
 }
 
@@ -249,7 +257,16 @@ async function loadAchievements() {
   }
 }
 
-
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.Telegram?.WebApp?.initData) {
+    Telegram.WebApp.expand();
+    startGame();
+  } else {
+    console.warn("Запущено вне Telegram WebApp");
+    // Можно добавить fallback-режим
+    startGame();
+  }
+});
 
 function toggleMusic() {
   if (backgroundMusic.paused) {
@@ -579,11 +596,6 @@ function toggleMusic() {
       else if (event.key === 'ArrowDown') playerDropFull();
       else if (event.key === 'ArrowUp') playerRotate(1);
     });
-
-    startGame();
-    startGame();
-    
-
 
     async function startGame() {
       await loadAchievements();
