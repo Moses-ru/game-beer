@@ -240,33 +240,28 @@
     
     // Новая функция сохранения достижений в Firebase
     async function saveAchievements() {
-      if (!achievementsCache.dirty) return;
-      if (Date.now() - achievementsCache.lastSaved < 5000) return; // Не сохранять чаще чем раз в 5 сек
-      
       try {
+        const initData = Telegram?.WebApp?.initData;
         const user = Telegram?.WebApp?.initDataUnsafe?.user;
-        const userId = user?.id || 'anonymous';
         
-        const dataToSave = {
-          achievements,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        // Если есть данные пользователя Telegram, сохраняем и их
-        if (user) {
-          dataToSave.userInfo = {
-            id: user.id,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            username: user.username
-          };
+        if (!user || !user.id) {
+          console.warn("User data not available");
+          return;
         }
         
-        await db.collection('tetrisAchievements').doc(String(userId)).set(dataToSave, { merge: true });
+        await db.collection('tetris_players').doc(String(user.id)).set({
+          achievements: achievements,
+          user_info: {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username
+          },
+          last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+          high_score: firebase.firestore.FieldValue.max(player.score)
+        }, { merge: true });
         
-        achievementsCache.lastSaved = Date.now();
-        achievementsCache.dirty = false;
-        console.log("Achievements saved to Firebase");
+        console.log("Achievements saved for user:", user.id);
       } catch (e) {
         console.error("Firebase save error:", e);
       }
@@ -276,27 +271,21 @@
     async function loadAchievements() {
       try {
         const user = Telegram?.WebApp?.initDataUnsafe?.user;
-        const userId = user?.id || 'anonymous';
+        if (!user || !user.id) return;
         
-        const doc = await db.collection('tetrisAchievements').doc(String(userId)).get();
-        
+        const doc = await db.collection('tetrisPlayers').doc(String(user.id)).get();
         if (doc.exists) {
           const data = doc.data();
           if (data.achievements) {
-            for (let key in achievements) {
-              if (data.achievements.hasOwnProperty(key)) {
-                achievements[key] = data.achievements[key];
-              }
-            }
-            console.log("Achievements loaded from Firebase");
+            Object.assign(achievements, data.achievements);
+            console.log("Achievements loaded for user:", user.id);
           }
         }
-        
-        achievementsCache.lastLoaded = Date.now();
       } catch (e) {
         console.warn("Firebase load error:", e);
       }
     }
+
 
     document.addEventListener('DOMContentLoaded', () => {
       if (window.Telegram?.WebApp?.initData) {
