@@ -182,25 +182,20 @@
     let db;
     try {
       const app = firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      console.log("Firebase initialized successfully");
-      
-      // Включаем оффлайн-поддержку
+    
+      // Сначала включаем persistence
       firebase.firestore().enablePersistence()
+        .then(() => {
+          db = firebase.firestore();
+          console.log("Firebase initialized successfully with persistence");
+        })
         .catch((err) => {
           console.warn("Firebase offline persistence error:", err);
+          db = firebase.firestore(); // Инициализируем даже если persistence не сработал
         });
     } catch (e) {
       console.error("Firebase initialization error:", e);
     }
-
-      
-    
-    // Включаем оффлайн-поддержку
-    firebase.firestore().enablePersistence()
-      .catch((err) => {
-        console.warn("Firebase offline persistence error:", err);
-      });
 
     Telegram?.WebApp?.expand();
     const canvas = document.getElementById('tetris');
