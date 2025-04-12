@@ -312,6 +312,7 @@
 
 
     document.addEventListener('DOMContentLoaded', () => {
+      console.log("WebApp init data:", Telegram?.WebApp?.initDataUnsafe);
       if (window.Telegram?.WebApp?.initData) {
         Telegram.WebApp.expand();
         startGame();
@@ -591,6 +592,7 @@
     };
 
     function showAchievement(text) {
+      console.log("Showing achievement:", text, "User:", Telegram?.WebApp?.initDataUnsafe?.user);
       const popup = document.getElementById('achievementPopup');
       popup.textContent = `🏅 ${text}`;
       popup.classList.add('show');
