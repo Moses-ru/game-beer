@@ -187,9 +187,6 @@
       console.error("Firebase initialization error:", e);
     }
       
-    // Инициализируем Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
     
     // Включаем оффлайн-поддержку
     firebase.firestore().enablePersistence()
