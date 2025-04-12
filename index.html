@@ -178,6 +178,15 @@
       measurementId: "G-QFDZ0NJMS6"
     };
     
+    let db;
+    try {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      console.log("Firebase initialized successfully");
+    } catch (e) {
+      console.error("Firebase initialization error:", e);
+    }
+      
     // Инициализируем Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -241,15 +250,13 @@
     // Новая функция сохранения достижений в Firebase
     async function saveAchievements() {
       try {
-        const initData = Telegram?.WebApp?.initData;
         const user = Telegram?.WebApp?.initDataUnsafe?.user;
-        
-        if (!user || !user.id) {
+        if (!user?.id) {
           console.warn("User data not available");
-          return;
+          return false;
         }
-        
-        await db.collection('tetris_players').doc(String(user.id)).set({
+    
+        const playerData = {
           achievements: achievements,
           user_info: {
             id: user.id,
@@ -258,33 +265,50 @@
             username: user.username
           },
           last_updated: firebase.firestore.FieldValue.serverTimestamp(),
-          high_score: firebase.firestore.FieldValue.max(player.score)
-        }, { merge: true });
-        
-        console.log("Achievements saved for user:", user.id);
+          high_score: Math.max(player.score, await getCurrentHighScore(user.id))
+        };
+    
+        await db.collection('tetris_players').doc(String(user.id)).set(playerData, { merge: true });
+        console.log("Data saved for user:", user.id);
+        return true;
       } catch (e) {
-        console.error("Firebase save error:", e);
+        console.error("Save error:", e);
+        return false;
       }
     }
-
-    // Новая функция загрузки достижений из Firebase
+    
+    // Функция получения текущего рекорда
+    async function getCurrentHighScore(userId) {
+      try {
+        const doc = await db.collection('tetris_players').doc(String(userId)).get();
+        return doc.exists ? (doc.data().high_score || 0) : 0;
+      } catch (e) {
+        console.warn("Failed to get high score:", e);
+        return 0;
+      }
+    }
+    
+    // Функция загрузки достижений
     async function loadAchievements() {
       try {
         const user = Telegram?.WebApp?.initDataUnsafe?.user;
-        if (!user || !user.id) return;
-        
-        const doc = await db.collection('tetrisPlayers').doc(String(user.id)).get();
+        if (!user?.id) return;
+    
+        const doc = await db.collection('tetris_players').doc(String(user.id)).get();
         if (doc.exists) {
           const data = doc.data();
           if (data.achievements) {
             Object.assign(achievements, data.achievements);
-            console.log("Achievements loaded for user:", user.id);
+            console.log("Loaded achievements for user:", user.id);
+          }
+          if (data.high_score) {
+            console.log("Loaded high score:", data.high_score);
           }
         }
       } catch (e) {
-        console.warn("Firebase load error:", e);
+        console.warn("Load error:", e);
       }
-    }
+}
 
 
     document.addEventListener('DOMContentLoaded', () => {
