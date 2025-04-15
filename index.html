@@ -535,10 +535,34 @@
       }
     }
 
+    async function sendFinalScore() {
+      const user = Telegram?.WebApp?.initDataUnsafe?.user;
+      if (!user || !user.id) return;
+
+      try {
+        await fetch("https://beer-backend-bqh2.onrender.com/api/score", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Telegram-Bot-InitData": Telegram.WebApp.initData
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            username: user.username || user.first_name,
+            score: player.score
+          })
+        });
+        console.log("🎯 Финальный счёт отправлен:", player.score);
+      } catch (e) {
+        console.error("❌ Ошибка при отправке счёта:", e);
+      }
+    }
+
     function showGameOver() {
       document.getElementById('finalScore').innerText = 'Your score: ' + player.score;
       document.getElementById('gameOver').style.display = 'block';
       sounds.gameover.play();
+      sendFinalScore(); // 👇 теперь финальный счёт отправляется здесь
     }
 
     function restartGame() {
