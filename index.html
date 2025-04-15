@@ -315,13 +315,14 @@
     }
 
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       if (window.Telegram?.WebApp?.initData) {
         Telegram.WebApp.expand();
-        await loadAchievements(); // <=== вот это ДО запуска игры
-        startGame();;
+        await loadAchievements(); // теперь await работает
+        startGame();
       } else {
         console.warn("Запущено вне Telegram WebApp");
+        await loadAchievements();
         startGame();
       }
     });
@@ -341,22 +342,22 @@
       null, '#ef4444', '#eab308', '#10b981', '#3b82f6', '#ec4899', '#22c55e', '#a855f7'
     ];
 
-    function drawMatrix(matrix, offset) {
+    function drawMatrix(matrix, offset, ghost = false) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
-            const grad = context.createLinearGradient(0, 0, 1, 1);
-            grad.addColorStop(0, '#fff');
-            grad.addColorStop(1, solidColors[value]);
-            context.fillStyle = grad;
-            context.strokeStyle = '#00000055';
-            context.lineWidth = 0.05;
+            const color = solidColors[value];
+            context.fillStyle = ghost ? color + '55' : color;
+            context.strokeStyle = ghost ? '#ffffff11' : '#00000055';
+            context.lineWidth = ghost ? 0.02 : 0.05;
             context.fillRect(x + offset.x, y + offset.y, 1, 1);
             context.strokeRect(x + offset.x, y + offset.y, 1, 1);
           }
         });
       });
     }
+
+  
 
     function drawGrid() {
       context.strokeStyle = '#ffffff0a';
@@ -377,9 +378,14 @@
     function draw() {
       context.fillStyle = '#0f172a';
       context.fillRect(0, 0, canvas.width, canvas.height);
+
       drawGrid();
+
+      const ghostPos = getGhostPosition(player, arena);
+      drawMatrix(player.matrix, ghostPos, true); // тень
+
       drawMatrix(arena, {x: 0, y: 0});
-      drawMatrix(player.matrix, player.pos);
+      drawMatrix(player.matrix, player.pos); // текущая фигура
     }
 
     function createMatrix(w, h) {
@@ -405,12 +411,23 @@
       const [m, o] = [player.matrix, player.pos];
       for (let y = 0; y < m.length; ++y) {
         for (let x = 0; x < m[y].length; ++x) {
-          if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+          if (m[y][x] !== 0 &&
+              (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
             return true;
           }
         }
       }
       return false;
+    }
+
+    // 💡 ВСТАВЬ СЮДА
+    function getGhostPosition(player, arena) {
+      const pos = { ...player.pos };
+      while (!collide(arena, { ...player, pos })) {
+        pos.y++;
+      }
+      pos.y--;
+      return pos;
     }
 
     function merge(arena, player) {
@@ -668,7 +685,7 @@
         popup.classList.remove('show');
       }, 3000);
     }
-    }
+    
 
     function checkAchievements(type = "") {
       if (type === "move" && !achievements.firstBlock) {
