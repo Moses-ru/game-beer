@@ -13,23 +13,60 @@
       padding: 0;
       height: 100%;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      background: #ffffff;
       color: #f8fafc;
       text-align: center;
       overflow: hidden;
     }
     
+    #nextBlocks {
+      position: fixed;
+      top: 0.5rem;
+      left: 1.2rem; /* Смещаем влево от кнопок меню */
+      background-color: #252b39;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      z-index: 5;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      height: 1.5rem;
+    }
+
+    #nextBlocks h3 {
+      color: white;
+      margin: 0 0.5rem 0 0;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .next-blocks-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    #nextBlocks canvas {
+      background: rgba(88, 88, 88, 0.144);
+      border-radius: 0.3rem;
+      width: 30px;
+      height: 30px;
+    }
+
     #achievementPopup {
       position: fixed;
       top: 1rem;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(251, 191, 36, 0.9);
-      color: #1e293b;
+      background: rgba(0, 0, 0, 0.9);
+      color: #ffffff;
       padding: 0.75rem 1.5rem;
       border-radius: 0.75rem;
       font-weight: bold;
-      box-shadow: 0 0 10px #fbbf24;
+      
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, top 0.5s ease;
@@ -41,38 +78,38 @@
     }
 
     canvas {
-      background-color: rgba(30, 41, 59, 0.6);
+      background-color: #252b39;
       backdrop-filter: blur(4px);
       display: block;
       margin: 0 auto;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px #fbbf24;
+      border-radius: 0.7rem;
+      
       width: 90vmin;
       height: calc(90vmin * (20 / 12));
       max-height: 70vh;
     }
 
     h1 {
-      color: #fbbf24;
-      text-shadow: 0 0 10px #fbbf24;
+      color: #252b39;
+      
       font-size: 2rem;
       margin: 0.5rem;
     }
 
     #score {
+      color: #252b39;
       font-size: 1.2rem;
       margin: 0.5rem;
-      text-shadow: 0 0 6px #fbbf24;
+      
     }
 
     #menu {
-      position: absolute;
+      position: fixed; /* Изменено с absolute на fixed */
       top: 0.5rem;
-      left: 0;
-      right: 0;
+      right: 0.5rem; /* Размещаем в правом верхнем углу */
       display: flex;
-      justify-content: space-between;
-      padding: 0 1rem;
+      gap: 0.5rem;
+      z-index: 10;
     }
 
     #menu button {
@@ -80,91 +117,299 @@
       height: 2.5rem;
       padding: 0;
       font-size: 1.2rem;
-      border-radius: 50%;
+      border-radius: 20%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fbbf24;
-      color: #1e293b;
+      background-color: #252b39;
+      color: #ffffff;
       border: none;
       cursor: pointer;
-      box-shadow: 0 0 10px #fbbf24;
-      transition: transform 0.2s, box-shadow 0.3s;
+      
+      transition: transform 0.2s, background-color 0.2s;
     }
-    #gameOver button,
-    .controls button {
-      background-color: #fbbf24;
-      color: #1e293b;
-      border: none;
-      padding: 1rem 1.5rem;
-      font-size: 1.5rem;
-      border-radius: 0.75rem;
-      cursor: pointer;
-      box-shadow: 0 0 10px #fbbf24;
-      transition: transform 0.2s, box-shadow 0.3s;
+    
+    #menu button:active {
+      transform: scale(0.9);
+      background-color: #252b39;
     }
-
-    #menu button:hover,
-    #gameOver button:hover,
-    .controls button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px #fde68a;
-    }
+    
+    
 
     .controls {
       position: fixed;
-      bottom: 0;
+      bottom: 1rem;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.8);
       display: flex;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 1rem;
       padding: 0.5rem;
       z-index: 5;
-      backdrop-filter: blur(4px);
+    }
+
+    .control-btn {
+      width: 3.5rem;
+      height: 3.5rem;
+      background: #252b39;
+      border-radius: 20%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .control-btn:hover {
+      background: #3b4458;
+      transform: scale(1.1);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .control-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    /* Для мобильных устройств делаем кнопки больше */
+    @media (max-width: 768px) {
+      .control-btn {
+        width: 4rem;
+        height: 4rem;
+      }
+      
+      .control-icon {
+        font-size: 2rem;
+      }
+    }
+
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('start-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      gap: 1rem;
+    }
+
+    #startScreen button {
+      font-size: 1.2rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      background-color: #252b39;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    #startScreen button:hover {
+      transform: scale(1.05);
+      
+    }
+
+    #getReadyText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      color: #ffffff;
+      
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    #leaderboardModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #leaderboardContent {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 90%;
+      width: 300px;
+      
+      text-align: center;
+    }
+
+    #leaderboardList {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+      text-align: left;
     }
 
     #gameOver {
       display: none;
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(30, 41, 59, 0.9);
-      padding: 2rem;
-      border: 2px solid #fbbf24;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px #fbbf24;
-      z-index: 10;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
       animation: fadeIn 0.5s ease-out forwards;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -60%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
+    .game-over-content {
+      max-width: 90%;
+      width: 100%;
+      padding: 2rem;
+      animation: slideUp 0.5s ease-out;
     }
+
+    #gameOver h2 {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      color: #f87171;
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    #finalScore {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .game-over-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    #gameOver button {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      border: none;
+      padding: 1rem;
+      font-size: 1.2rem;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    #gameOver button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
   </style>
 </head>
 <body>
+  <div id="startScreen">
+    <h1>Tetris</h1>
+    <button onclick="startGameWithAnimation()">Готов!</button>
+    <button onclick="showLeaderboard()">Таблица рекордов</button>
+    <button onclick="showSettings()">Настройки</button>
+  </div>
+  
+  <div id="getReadyText">Готов!</div>
+
+  <div id="leaderboardModal" style="display:none">
+    <div id="leaderboardContent">
+      <h2>🏆 Топ-10 игроков</h2>
+      <ul id="leaderboardList"></ul>
+      <div id="playerPlace" style="margin-top: 1rem; font-weight: bold;"></div>
+      <button onclick="closeLeaderboard()">Закрыть</button>
+    </div>
+  </div>
+
   <div id="achievementPopup"></div>
   <div id="menu">
     <button onclick="toggleMusic()">🔊</button>
-    <button onclick="restartGame()">↻</button>
+    <button onclick="try{restartGame()}catch(e){console.error(e);alert('Ошибка перезапуска')}">↻</button>
   </div>
-  <h1>⬟ Dublin Tetris</h1>
+  <h1>.</h1>
   <canvas id="tetris" width="240" height="400"></canvas>
   <div id="score">СЧЁТ: 0</div>
   <div class="controls">
-    <button onclick="playerMove(-1)">⬅️</button>
-    <button onclick="playerDropFull()">⬇️</button>
-    <button onclick="playerRotate(1)">🔄</button>
-    <button onclick="playerMove(1)">➡️</button>
+    <button class="control-btn" onclick="playerMove(-1)">
+      <span class="control-icon">⬅️</span>
+    </button>
+    <button class="control-btn" onclick="playerDropFull()">
+      <span class="control-icon">⬇️</span>
+    </button>
+    <button class="control-btn" onclick="playerRotate(1)">
+      <span class="control-icon">🔄</span>
+    </button>
+    <button class="control-btn" onclick="playerMove(1)">
+      <span class="control-icon">➡️</span>
+    </button>
   </div>
+  
+  <div id="nextBlocks">
+    <h3>Следующие:</h3>
+    <div class="next-blocks-container">
+      <canvas id="next1" width="60" height="60"></canvas>
+      <canvas id="next2" width="60" height="60"></canvas>
+      <canvas id="next3" width="60" height="60"></canvas>
+    </div>
+  </div>
+
   <div id="gameOver">
-    <div id="finalScore">СЧЁТ: 0</div>
-    <button onclick="restartGame()">РЕСТАРТ</button>
+    <div class="game-over-content">
+      <h2>GAME OVER</h2>
+      
+      <div class="game-over-buttons">
+        <button onclick="restartGame()">Играть снова</button>
+        <button onclick="showLeaderboard()">Таблица рекордов</button>
+      </div>
+
+      <div id="finalScore">Ваш счет: 0</div>
+    </div>
   </div>
+
+
 
   <script>
     // Инициализация Firebase
@@ -177,6 +422,8 @@
       appId: "1:666876867507:web:2f932eda3bdf2469d451c6",
       measurementId: "G-QFDZ0NJMS6"
     };
+
+    
 
     // Инициализируем Firebase только один раз
     let db;
@@ -202,12 +449,55 @@
     const context = canvas.getContext('2d');
     context.scale(20, 20);
 
+    const nextBlocks = [];
+    const nextCanvases = [
+      document.getElementById('next1'),
+      document.getElementById('next2'),
+      document.getElementById('next3')
+    ];
+    const nextContexts = nextCanvases.map(canvas => {
+      const ctx = canvas.getContext('2d');
+      // Увеличиваем масштаб для более точного позиционирования
+      ctx.scale(10, 10);
+      return ctx;
+    });
+
     // Кэш для достижений
     const achievementsCache = {
       lastSaved: 0,
       lastLoaded: 0,
       dirty: false
     };
+
+    function startGameWithAnimation() {
+      document.getElementById("startScreen").style.display = "none";
+      
+      // Сбросим состояние игры перед началом
+      arena = createMatrix(12, 20);
+      player = { pos: {x: 0, y: 0}, matrix: null, score: 0, type: null };
+      dropCounter = 0;
+      dropInterval = initialDropInterval;
+      blocksPlaced = 0;
+      isGameOver = false;
+      nextBlocks.length = 0;
+      updateScore();
+
+      const getReady = document.getElementById("getReadyText");
+      getReady.style.opacity = 1;
+
+      setTimeout(() => {
+        getReady.style.opacity = 0;
+        startGame(); // обычная логика запуска
+      }, 1000);
+    }
+
+    function showLeaderboard() {
+      alert("⏳ Таблица рекордов в разработке!");
+    }
+
+    function showSettings() {
+      alert("⚙️ Настройки будут добавлены позже.");
+    }
 
     function toggleMusic() {
       const btn = document.querySelector('#menu button[onclick="toggleMusic()"]');
@@ -219,6 +509,16 @@
         btn.textContent = "🔇";
       }
     }
+
+    document.querySelectorAll('.control-btn').forEach(btn => {
+      btn.addEventListener('touchstart', function() {
+        this.style.transform = 'scale(0.95)';
+      });
+      
+      btn.addEventListener('touchend', function() {
+        this.style.transform = 'scale(1)';
+      });
+    });
 
     const sounds = {
       move: new Audio('sounds/move.mp3'),
@@ -237,6 +537,54 @@
     backgroundMusic.volume = 0.4;
 
     let musicStarted = false;
+
+    async function showLeaderboard() {
+      const list = document.getElementById('leaderboardList');
+      list.innerHTML = "⏳ Загрузка...";
+
+      document.getElementById('leaderboardModal').style.display = 'flex';
+
+      try {
+        const res = await fetch("https://beer-backend-bqh2.onrender.com/api/leaderboard");
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          list.innerHTML = "Ошибка загрузки 😢";
+          return;
+        }
+
+        list.innerHTML = "";
+        data.slice(0, 10).forEach((player, index) => {
+          const userId = Telegram?.WebApp?.initDataUnsafe?.user?.id;
+          if (userId) {
+            const myIndex = data.findIndex(p => p.user_id === userId);
+            if (myIndex >= 0) {
+              const myPlace = myIndex + 1;
+              document.getElementById("playerPlace").innerText = `👤 Ты на ${myPlace} месте`;
+            } else {
+              document.getElementById("playerPlace").innerText = `👤 Ты ещё не в топе`;
+            }
+          }
+          const place = index + 1;
+          const medal = place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : `#${place}`;
+          const name = player.username || "Аноним";
+          const score = player.score || 0;
+
+          const li = document.createElement('li');
+          li.textContent = `${medal} ${name} — ${score}`;
+          list.appendChild(li);
+        });
+
+      } catch (e) {
+        list.innerHTML = "Ошибка 😢";
+        console.error("Ошибка загрузки лидерборда:", e);
+      }
+    }
+
+    function closeLeaderboard() {
+      document.getElementById('leaderboardModal').style.display = 'none';
+      document.getElementById("playerPlace").innerText = "";
+    }
 
     function ensureMusicPlaying() {
       if (!musicStarted) {
@@ -319,11 +667,11 @@
       if (window.Telegram?.WebApp?.initData) {
         Telegram.WebApp.expand();
         await loadAchievements(); // теперь await работает
-        startGame();
+        //startGame();
       } else {
         console.warn("Запущено вне Telegram WebApp");
         await loadAchievements();
-        startGame();
+        //startGame();
       }
     });
 
@@ -346,12 +694,39 @@
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
-            const color = solidColors[value];
-            context.fillStyle = ghost ? color + '55' : color;
-            context.strokeStyle = ghost ? '#ffffff11' : '#00000055';
-            context.lineWidth = ghost ? 0.02 : 0.05;
-            context.fillRect(x + offset.x, y + offset.y, 1, 1);
-            context.strokeRect(x + offset.x, y + offset.y, 1, 1);
+            if (ghost) {
+              // Белая тень с прозрачностью
+              context.fillStyle = 'rgba(255, 255, 255, 0.1)';
+              context.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+              context.lineWidth = 0.02;
+            } else {
+              // Обычный цвет фигуры
+              const color = solidColors[value];
+              context.fillStyle = color;
+              context.strokeStyle = '#00000055';
+              context.lineWidth = 0.05;
+            }
+            
+            // Рисуем скруглённый квадрат
+            const size = 0.9;
+            const radius = 0.15;
+            const posX = x + offset.x + (1 - size)/2;
+            const posY = y + offset.y + (1 - size)/2;
+            
+            context.beginPath();
+            context.moveTo(posX + radius, posY);
+            context.lineTo(posX + size - radius, posY);
+            context.quadraticCurveTo(posX + size, posY, posX + size, posY + radius);
+            context.lineTo(posX + size, posY + size - radius);
+            context.quadraticCurveTo(posX + size, posY + size, posX + size - radius, posY + size);
+            context.lineTo(posX + radius, posY + size);
+            context.quadraticCurveTo(posX, posY + size, posX, posY + size - radius);
+            context.lineTo(posX, posY + radius);
+            context.quadraticCurveTo(posX, posY, posX + radius, posY);
+            context.closePath();
+            
+            context.fill();
+            context.stroke();
           }
         });
       });
@@ -360,7 +735,7 @@
   
 
     function drawGrid() {
-      context.strokeStyle = '#ffffff0a';
+      context.strokeStyle = '#ffffff0b';
       for (let y = 0; y < 20; y++) {
         context.beginPath();
         context.moveTo(0, y);
@@ -477,21 +852,108 @@
     }
 
     function playerReset() {
-      const pieces = 'TJLOSZI';
-      const type = pieces[Math.random() * pieces.length | 0];
-      player.matrix = createPiece(type);
-      player.type = type;
+      // Если очередь пуста, заполняем её
+      if (nextBlocks.length === 0) {
+        fillNextBlocksQueue();
+      }
+      
+      // Проверяем, что есть фигуры в очереди
+      if (nextBlocks.length === 0) {
+        console.error("Нет фигур в очереди!");
+        return;
+      }
+      
+      // Берем следующую фигуру из очереди
+      player.type = nextBlocks.shift();
+      player.matrix = createPiece(player.type);
+      
+      // Добавляем новую фигуру в конец очереди
+      fillNextBlocksQueue();
+      
       player.pos.y = 0;
       player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
       
-      // Увеличиваем счетчик блоков и обновляем скорость
       blocksPlaced++;
-      dropInterval = initialDropInterval * Math.pow(0.99, blocksPlaced); // Уменьшаем на 2% с каждым блоком
-      
-      // Устанавливаем минимальную скорость
+      dropInterval = initialDropInterval * Math.pow(0.99, blocksPlaced);
       if (dropInterval < 100) dropInterval = 100;
       
-      if (collide(arena, player)) showGameOver();
+      // Проверяем коллизию только если игровое поле не пустое
+      const isArenaEmpty = arena.every(row => row.every(cell => cell === 0));
+      if (!isArenaEmpty && collide(arena, player)) {
+        showGameOver();
+      }
+      
+      // Обновляем отображение следующих фигур
+      drawNextBlocks();
+    }
+
+    function fillNextBlocksQueue() {
+      const pieces = 'TJLOSZI';
+      while (nextBlocks.length < 3) {
+        const type = pieces[Math.floor(Math.random() * pieces.length)];
+        nextBlocks.push(type);
+      }
+    }
+
+    function drawNextBlocks() {
+      // Очищаем все canvas предпросмотра
+      nextContexts.forEach(ctx => {
+        ctx.clearRect(0, 0, 4, 4);
+      });
+      
+      // Рисуем следующие 3 фигуры
+      for (let i = 0; i < 3; i++) {
+        if (nextBlocks[i]) {
+          const matrix = createPiece(nextBlocks[i]);
+          drawNextBlock(matrix, nextContexts[i]);
+        }
+      }
+    }
+
+    function drawNextBlock(matrix, ctx) {
+      // Очищаем canvas
+      ctx.clearRect(0, 0, 6, 6);
+      
+      // Размеры матрицы фигуры
+      const matrixWidth = matrix[0].length;
+      const matrixHeight = matrix.length;
+      
+      // Центрируем фигуру с учетом её размеров
+      const offsetX = (6 - matrixWidth) / 2;
+      const offsetY = (6 - matrixHeight) / 2;
+      
+      // Параметры отрисовки
+      const size = 0.8;
+      const radius = 0.1;
+      
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+            ctx.fillStyle = solidColors[value];
+            ctx.strokeStyle = '#00000055';
+            ctx.lineWidth = 0.05;
+            
+            const posX = x + offsetX + (1 - size)/2;
+            const posY = y + offsetY + (1 - size)/2;
+            
+            // Рисуем скругленный блок
+            ctx.beginPath();
+            ctx.moveTo(posX + radius, posY);
+            ctx.lineTo(posX + size - radius, posY);
+            ctx.quadraticCurveTo(posX + size, posY, posX + size, posY + radius);
+            ctx.lineTo(posX + size, posY + size - radius);
+            ctx.quadraticCurveTo(posX + size, posY + size, posX + size - radius, posY + size);
+            ctx.lineTo(posX + radius, posY + size);
+            ctx.quadraticCurveTo(posX, posY + size, posX, posY + size - radius);
+            ctx.lineTo(posX, posY + radius);
+            ctx.quadraticCurveTo(posX, posY, posX + radius, posY);
+            ctx.closePath();
+            
+            ctx.fill();
+            ctx.stroke();
+          }
+        });
+      });
     }
 
     function playerMove(dir) {
@@ -596,39 +1058,132 @@
         return null;
       }
     }
-    
+
+    let animationFrameId = 0;
+    let isGameOver = false;
+
     async function showGameOver() {
-      document.getElementById('finalScore').innerText = 'Your score: ' + player.score;
-      document.getElementById('gameOver').style.display = 'block';
+      if (isGameOver) return;
+      isGameOver = true;
+      
+      // Останавливаем игровой цикл
+      cancelAnimationFrame(animationFrameId);
+      
+      const gameOver = document.getElementById('gameOver');
+      gameOver.classList.remove('hide');
+      gameOver.classList.add('show');
+      
+      // Обновляем счет
+      document.getElementById('finalScore').innerText = 'Ваш счет: ' + player.score;
+      
+      // Проигрываем звук
       sounds.gameover.play();
       
-      // Сохраняем перед отправкой
-      await saveAchievements();
-      await sendFinalScore();
-      
-      const place = await getPlayerRank();
-      if (place) {
-        document.getElementById('finalScore').innerText += `\n🏅 Ты на ${place} месте в пабе!`;
-      } else {
-        document.getElementById('finalScore').innerText += `\n(место в пабе неизвестно)`;
+      try {
+        // Сохраняем достижения и отправляем счет
+        await saveAchievements();
+        await sendFinalScore();
+        
+        // Получаем и показываем место в таблице лидеров
+        const place = await getPlayerRank();
+        if (place) {
+          const placeText = document.createElement('div');
+          placeText.className = 'leaderboard-place';
+          placeText.textContent = `🏆 Ваше место: ${place}`;
+          document.querySelector('.game-over-content').appendChild(placeText);
+        }
+      } catch (e) {
+        console.error("Ошибка при обработке game over:", e);
       }
     }
 
+    function startGameWithAnimation() {
+      document.getElementById("startScreen").style.display = "none";
+
+      const getReady = document.getElementById("getReadyText");
+      getReady.style.opacity = 1;
+
+      setTimeout(() => {
+        getReady.style.opacity = 0;
+        startGame(); // обычная логика запуска
+      }, 1000);
+    }
+
     function restartGame() {
-      if (player.score < 50 && !achievements.earlyRestart) {
-        achievements.earlyRestart = true;
-        showAchievement("Ранний рестарт!");
-      }
-      ensureMusicPlaying();
-      checkAchievements("restart");
+      // Останавливаем все звуки
+      sounds.gameover.pause();
+      sounds.gameover.currentTime = 0;
+      backgroundMusic.pause();
+      
+      // Сбрасываем состояние игры
+      arena = createMatrix(12, 20);
+      player = { 
+        pos: {x: 0, y: 0}, 
+        matrix: null, 
+        score: 0, 
+        type: null 
+      };
+      dropCounter = 0;
+      dropInterval = initialDropInterval;
+      blocksPlaced = 0;
+      isGameOver = false;
+      nextBlocks.length = 0;
+      
+      // Скрываем экран Game Over если он видим
       document.getElementById('gameOver').style.display = 'none';
-      arena.forEach(row => row.fill(0));
-      player.score = 0;
-      blocksPlaced = 0; // Сбрасываем счетчик блоков
-      dropInterval = initialDropInterval; // Восстанавливаем начальную скорость
+      
+      // Обновляем интерфейс
       updateScore();
+      
+      // Перезапускаем игру
       playerReset();
       sounds.restart.play();
+      
+      // Перезапускаем музыку
+      musicStarted = false;
+      ensureMusicPlaying();
+      
+      // Запускаем игровой цикл
+      lastTime = 0;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      update();
+    }
+
+    // Обновите функцию showGameOver():
+    async function showGameOver() {
+      if (isGameOver) return;
+      isGameOver = true;
+      
+      // Останавливаем игровой цикл
+      cancelAnimationFrame(animationFrameId);
+      
+      const gameOver = document.getElementById('gameOver');
+      gameOver.style.display = 'flex'; // Используем display вместо classList
+      
+      // Обновляем счет
+      document.getElementById('finalScore').innerText = 'Ваш счет: ' + player.score;
+      
+      // Проигрываем звук
+      sounds.gameover.play();
+      
+      try {
+        // Сохраняем достижения и отправляем счет
+        await saveAchievements();
+        await sendFinalScore();
+        
+        // Получаем и показываем место в таблице лидеров
+        const place = await getPlayerRank();
+        if (place) {
+          const placeText = document.createElement('div');
+          placeText.className = 'leaderboard-place';
+          placeText.textContent = `🏆 Ваше место: ${place}`;
+          document.querySelector('.game-over-content').appendChild(placeText);
+        }
+      } catch (e) {
+        console.error("Ошибка при обработке game over:", e);
+      }
     }
 
     function updateScore() {
@@ -717,12 +1272,14 @@
     let lastTime = 0;
 
     function update(time = 0) {
+      if (isGameOver) return;
+      
       const deltaTime = time - lastTime;
       lastTime = time;
       dropCounter += deltaTime;
       if (dropCounter > dropInterval) playerDrop();
       draw();
-      requestAnimationFrame(update);
+      animationFrameId = requestAnimationFrame(update);
     }
 
     document.addEventListener('keydown', event => {
@@ -734,12 +1291,15 @@
 
     async function startGame() {
       await loadAchievements();
+      fillNextBlocksQueue(); // Инициализируем очередь
+      drawNextBlocks(); // Рисуем первые фигуры
       playerReset();
       updateScore();
       update();
     }
 
-    startGame();
+  
   </script>
+
 </body>
 </html>
