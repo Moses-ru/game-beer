@@ -558,11 +558,37 @@
       }
     }
 
-    function showGameOver() {
+    async function getPlayerRank() {
+      const user = Telegram?.WebApp?.initDataUnsafe?.user;
+      if (!user?.id) return null;
+    
+      try {
+        const res = await fetch("https://beer-backend-bqh2.onrender.com/api/leaderboard");
+        const data = await res.json();
+    
+        if (!Array.isArray(data)) return null;
+    
+        // Все игроки отсортированы по убыванию очков — ищем индекс пользователя
+        const index = data.findIndex(entry => entry.user_id === user.id);
+        return index >= 0 ? index + 1 : null;
+      } catch (e) {
+        console.error("❌ Ошибка при получении места игрока:", e);
+        return null;
+      }
+    }
+    
+    async function showGameOver() {
       document.getElementById('finalScore').innerText = 'Your score: ' + player.score;
       document.getElementById('gameOver').style.display = 'block';
       sounds.gameover.play();
-      sendFinalScore(); // 👇 теперь финальный счёт отправляется здесь
+      await sendFinalScore();
+    
+      const place = await getPlayerRank();
+      if (place) {
+        document.getElementById('finalScore').innerText += `\\n🏅 Ты на ${place} месте в пабе!`;
+      } else {
+        document.getElementById('finalScore').innerText += `\\n(место в пабе неизвестно)`;
+      }
     }
 
     function restartGame() {
