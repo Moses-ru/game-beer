@@ -491,10 +491,6 @@
       }, 1000);
     }
 
-    function showLeaderboard() {
-      alert("⏳ Таблица рекордов в разработке!");
-    }
-
     function showSettings() {
       alert("⚙️ Настройки будут добавлены позже.");
     }
@@ -541,43 +537,75 @@
     async function showLeaderboard() {
       const list = document.getElementById('leaderboardList');
       list.innerHTML = "⏳ Загрузка...";
-
+      
       document.getElementById('leaderboardModal').style.display = 'flex';
 
       try {
-        const res = await fetch("https://beer-backend-bqh2.onrender.com/api/leaderboard");
-        const data = await res.json();
-
-        if (!Array.isArray(data)) {
-          list.innerHTML = "Ошибка загрузки 😢";
-          return;
+        if (!db) {
+          throw new Error("Firebase не инициализирован");
         }
 
-        list.innerHTML = "";
-        data.slice(0, 10).forEach((player, index) => {
-          const userId = Telegram?.WebApp?.initDataUnsafe?.user?.id;
-          if (userId) {
-            const myIndex = data.findIndex(p => p.user_id === userId);
-            if (myIndex >= 0) {
-              const myPlace = myIndex + 1;
-              document.getElementById("playerPlace").innerText = `👤 Ты на ${myPlace} месте`;
-            } else {
-              document.getElementById("playerPlace").innerText = `👤 Ты ещё не в топе`;
-            }
-          }
-          const place = index + 1;
-          const medal = place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : `#${place}`;
-          const name = player.username || "Аноним";
-          const score = player.score || 0;
+        // Получаем топ-10 игроков
+        const playersRef = db.collection("tetris_players")
+                            .orderBy("high_score", "desc")
+                            .limit(10);
+        
+        const snapshot = await playersRef.get();
+        const topPlayers = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const userInfo = data.user_info || {};
+          topPlayers.push({
+            id: doc.id,
+            score: data.high_score || 0,
+            username: userInfo.username || userInfo.first_name || "Аноним"
+          });
+        });
 
+        // Очищаем список
+        list.innerHTML = "";
+        
+        // Заполняем таблицу лидеров
+        topPlayers.forEach((player, index) => {
+          const place = index + 1;
+          const medal = place === 1 ? "🥇" : 
+                      place === 2 ? "🥈" : 
+                      place === 3 ? "🥉" : `#${place}`;
+          
           const li = document.createElement('li');
-          li.textContent = `${medal} ${name} — ${score}`;
+          li.textContent = `${medal} ${player.username} — ${player.score}`;
           list.appendChild(li);
         });
 
+        // Проверяем место текущего пользователя
+        const user = Telegram?.WebApp?.initDataUnsafe?.user;
+        if (user?.id) {
+          // Находим позицию пользователя в общем рейтинге
+          const userRef = db.collection("tetris_players")
+                          .where("user_info.id", "==", String(user.id));
+          
+          const userSnapshot = await userRef.get();
+          if (!userSnapshot.empty) {
+            const userData = userSnapshot.docs[0].data();
+            const userScore = userData.high_score || 0;
+            
+            // Получаем позицию пользователя
+            const rankSnapshot = await db.collection("tetris_players")
+                                      .where("high_score", ">", userScore)
+                                      .count()
+                                      .get();
+            
+            const userPlace = rankSnapshot.data().count + 1;
+            document.getElementById("playerPlace").innerText = `👤 Ваше место: ${userPlace}`;
+          } else {
+            document.getElementById("playerPlace").innerText = `👤 Вы ещё не в рейтинге`;
+          }
+        }
+        
       } catch (e) {
-        list.innerHTML = "Ошибка 😢";
         console.error("Ошибка загрузки лидерборда:", e);
+        list.innerHTML = "Ошибка загрузки данных 😢";
       }
     }
 
