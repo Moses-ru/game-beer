@@ -536,79 +536,89 @@
 
     async function showLeaderboard() {
       const list = document.getElementById('leaderboardList');
+      const playerPlaceEl = document.getElementById('playerPlace');
       list.innerHTML = "⏳ Загрузка...";
+      playerPlaceEl.textContent = "";
       
       document.getElementById('leaderboardModal').style.display = 'flex';
-
+    
       try {
-        if (!db) {
-          throw new Error("Firebase не инициализирован");
-        }
-
-        // Получаем топ-10 игроков
-        const playersRef = db.collection("tetris_players")
-                            .orderBy("high_score", "desc")
-                            .limit(10);
+        if (!db) throw new Error("Firebase не инициализирован");
+    
+        // 1. Получаем топ-10 игроков
+        const topPlayersQuery = db.collection("tetris_players")
+                                .orderBy("high_score", "desc")
+                                .limit(10);
         
-        const snapshot = await playersRef.get();
-        const topPlayers = [];
+        const topPlayersSnapshot = await topPlayersQuery.get();
         
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const userInfo = data.user_info || {};
-          topPlayers.push({
-            id: doc.id,
-            score: data.high_score || 0,
-            username: userInfo.username || userInfo.first_name || "Аноним"
-          });
-        });
-
         // Очищаем список
         list.innerHTML = "";
         
         // Заполняем таблицу лидеров
-        topPlayers.forEach((player, index) => {
+        topPlayersSnapshot.forEach((doc, index) => {
+          const data = doc.data();
+          const userInfo = data.user_info || {};
+          const username = userInfo.username || 
+                          (userInfo.first_name ? userInfo.first_name + (userInfo.last_name ? ' ' + userInfo.last_name : '') : "Аноним");
+          const score = data.high_score || 0;
+          
           const place = index + 1;
-          const medal = place === 1 ? "🥇" : 
-                      place === 2 ? "🥈" : 
-                      place === 3 ? "🥉" : `#${place}`;
+          const medal = place <= 3 ? ["🥇", "🥈", "🥉"][place - 1] : `${place}.`;
           
           const li = document.createElement('li');
-          li.textContent = `${medal} ${player.username} — ${player.score}`;
+          li.textContent = `${medal} ${username} — ${score}`;
           list.appendChild(li);
         });
-
-        // Проверяем место текущего пользователя
+    
+        // 2. Проверяем место текущего пользователя
         const user = Telegram?.WebApp?.initDataUnsafe?.user;
         if (user?.id) {
-          // Находим позицию пользователя в общем рейтинге
-          const userRef = db.collection("tetris_players")
-                          .where("user_info.id", "==", String(user.id));
-          
-          const userSnapshot = await userRef.get();
-          if (!userSnapshot.empty) {
-            const userData = userSnapshot.docs[0].data();
-            const userScore = userData.high_score || 0;
-            
-            // Получаем позицию пользователя
-            const rankSnapshot = await db.collection("tetris_players")
-                                      .where("high_score", ">", userScore)
-                                      .count()
-                                      .get();
-            
-            const userPlace = rankSnapshot.data().count + 1;
-            document.getElementById("playerPlace").innerText = `👤 Ваше место: ${userPlace}`;
-          } else {
-            document.getElementById("playerPlace").innerText = `👤 Вы ещё не в рейтинге`;
+          // Ищем пользователя в топ-10
+          let userInTop = false;
+          topPlayersSnapshot.forEach((doc, index) => {
+            const data = doc.data();
+            const docUserId = data.user_info?.id || doc.id; // Используем doc.id как fallback
+            if (String(docUserId) === String(user.id)) {
+              userInTop = true;
+              playerPlaceEl.textContent = `👤 Ваше место: ${index + 1}`;
+            }
+          });
+    
+          // Если пользователь не в топ-10, ищем его общее место
+          if (!userInTop) {
+            const userDoc = await db.collection("tetris_players").doc(String(user.id)).get();
+            if (userDoc.exists) {
+              const userScore = userDoc.data().high_score || 0;
+              const rankQuery = db.collection("tetris_players")
+                                 .where("high_score", ">", userScore);
+              
+              const rankSnapshot = await rankQuery.count().get();
+              const userPlace = rankSnapshot.data().count + 1;
+              
+              playerPlaceEl.textContent = `👤 Ваше место: ${userPlace}`;
+              
+              // Добавляем пользователя в конец списка, если он не в топ-10
+              const liSeparator = document.createElement('li');
+              liSeparator.innerHTML = `<hr style="margin: 5px 0; border-color: #555;">`;
+              list.appendChild(liSeparator);
+              
+              const userLi = document.createElement('li');
+              userLi.textContent = `${userPlace}. Вы — ${userScore}`;
+              userLi.style.fontWeight = 'bold';
+              list.appendChild(userLi);
+            } else {
+              playerPlaceEl.textContent = `👤 Вы ещё не в рейтинге`;
+            }
           }
         }
         
       } catch (e) {
         console.error("Ошибка загрузки лидерборда:", e);
-        list.innerHTML = "Ошибка загрузки данных 😢";
+        list.innerHTML = "Ошибка загрузки данных. Попробуйте позже.";
+        playerPlaceEl.textContent = "";
       }
     }
-
     function closeLeaderboard() {
       document.getElementById('leaderboardModal').style.display = 'none';
       document.getElementById("playerPlace").innerText = "";
