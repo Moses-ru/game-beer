@@ -671,12 +671,15 @@
           if (placeEl) placeEl.innerText = `👤 Ваше место: ${userPlace}`;   
             
         
-      } catch (e) {
-        console.error("Ошибка загрузки лидерборда:", e);
-        list.innerHTML = "Ошибка загрузки данных 😢";
-      }
-    }
-    
+          } catch (e) {
+            console.error("Ошибка загрузки лидерборда:", e);
+            list.innerHTML = "Ошибка загрузки данных 😢";
+          }
+        }
+        window.showLeaderboard = showLeaderboard;
+
+
+      
     function closeLeaderboard() {
       document.getElementById('leaderboardModal').style.display = 'none';
       document.getElementById("playerPlace").innerText = "";
