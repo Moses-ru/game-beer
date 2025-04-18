@@ -666,7 +666,9 @@
                                        .where("high_score", ">", userScore)
                                        .count()
                                        .get();
-            
+          
+          const placeEl = document.getElementById("playerPlace");
+          if (placeEl) placeEl.innerText = `👤 Ваше место: ${userPlace}`;   
             
         
       } catch (e) {
