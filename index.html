@@ -103,42 +103,6 @@
       
     }
 
-    .player-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    
-    .player-card {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background-color: #334155;
-      padding: 0.75rem 1rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    
-    .player-card img {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
-    }
-    
-    .player-name {
-      font-weight: bold;
-      font-size: 1rem;
-    }
-    
-    .player-score {
-      margin-left: auto;
-      font-size: 0.9rem;
-      color: #cbd5e1;
-    }
-    
     #menu {
       position: fixed; /* Изменено с absolute на fixed */
       top: 0.5rem;
@@ -277,7 +241,7 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.8);
-      z-index: 200;
+      z-index: 50;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -394,8 +358,8 @@
   <div id="leaderboardModal" style="display:none">
     <div id="leaderboardContent">
       <h2>🏆 Топ-10 игроков</h2>
-      <div id="leaderboardList" class="player-cards"></div>
-      
+      <ul id="leaderboardList"></ul>
+      <div id="playerPlace" style="margin-top: 1rem; font-weight: bold;"></div>
       <button onclick="closeLeaderboard()">Закрыть</button>
     </div>
   </div>
@@ -593,7 +557,7 @@
           const data = doc.data();
           const userInfo = data.user_info || {};
           topPlayers.push({
-            user_id: userInfo.id,
+            id: doc.id,
             score: data.high_score || 0,
             username: userInfo.username || userInfo.first_name || "Аноним"
           });
@@ -603,50 +567,15 @@
         list.innerHTML = "";
         
         // Заполняем таблицу лидеров
-        list.innerHTML = "";
-
-        topPlayers.forEach(player => {
-          const card = document.createElement('div');
-          card.className = 'player-card';
-        
-          const avatar = document.createElement('img');
-          const fallback = 'https://forum.guns.ru/forums/icons/avatars/00000145/145256.jpg';
+        topPlayers.forEach((player, index) => {
+          const place = index + 1;
+          const medal = place === 1 ? "🥇" : 
+                       place === 2 ? "🥈" : 
+                       place === 3 ? "🥉" : `#${place}`;
           
-          if (player.username) {
-            const testImage = new Image();
-            const avatarUrl = `https://t.me/i/userpic/320/${player.username}.jpg`;
-          
-            testImage.onload = () => {
-              // Проверим, не подставилось ли дефолтное "невидимое" изображение (Telegram баг)
-              if (testImage.width <= 40) {
-                avatar.src = fallback;
-              } else {
-                avatar.src = avatarUrl;
-              }
-            };
-          
-            testImage.onerror = () => {
-              avatar.src = fallback;
-            };
-          
-            testImage.src = avatarUrl;
-          } else {
-            avatar.src = fallback;
-          }
-        
-          const name = document.createElement('div');
-          name.className = 'player-name';
-          name.textContent = player.username;
-        
-          const score = document.createElement('div');
-          score.className = 'player-score';
-          score.textContent = `${player.score} очков`;
-        
-          card.appendChild(avatar);
-          card.appendChild(name);
-          card.appendChild(score);
-        
-          list.appendChild(card);
+          const li = document.createElement('li');
+          li.textContent = `${medal} ${player.username} — ${player.score}`;
+          list.appendChild(li);
         });
     
         // Проверяем место текущего пользователя
@@ -666,10 +595,13 @@
                                        .where("high_score", ">", userScore)
                                        .count()
                                        .get();
-          
-          const placeEl = document.getElementById("playerPlace");
-          if (placeEl) placeEl.innerText = `👤 Ваше место: ${userPlace}`;   
             
+            const userPlace = rankSnapshot.data().count + 1;
+            document.getElementById("playerPlace").innerText = `👤 Ваше место: ${user_place}`;
+          } else {
+            document.getElementById("playerPlace").innerText = `👤 Вы ещё не в рейтинге`;
+          }
+        }
         
       } catch (e) {
         console.error("Ошибка загрузки лидерборда:", e);
