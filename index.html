@@ -667,12 +667,7 @@
                                        .count()
                                        .get();
             
-            const userPlace = rankSnapshot.data().count + 1;
-            //document.getElementById("playerPlace").innerText = `👤 Ваше место: ${user_place}`;
-          } else {
-            document.getElementById("playerPlace").innerText = `👤 Вы ещё не в рейтинге`;
-          }
-        }
+            
         
       } catch (e) {
         console.error("Ошибка загрузки лидерборда:", e);
