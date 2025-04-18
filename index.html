@@ -593,7 +593,7 @@
           const data = doc.data();
           const userInfo = data.user_info || {};
           topPlayers.push({
-            id: doc.id,
+            user_id: userInfo.id,
             score: data.high_score || 0,
             username: userInfo.username || userInfo.first_name || "Аноним"
           });
@@ -610,7 +610,7 @@
           card.className = 'player-card';
         
           const avatar = document.createElement('img');
-          avatar.src = `https://t.me/i/userpic/320/${player.id}.jpg`; // Телеграм-аватар
+          avatar.src = `https://t.me/i/userpic/320/${player.user_id}.jpg`; // Телеграм-аватар
           avatar.onerror = () => avatar.src = 'default-avatar.png'; // запасной
         
           const name = document.createElement('div');
