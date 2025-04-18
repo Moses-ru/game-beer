@@ -610,7 +610,7 @@
           card.className = 'player-card';
         
           const avatar = document.createElement('img');
-          avatar.src = `https://t.me/i/userpic/320/${player.user_id}.jpg`; // Телеграм-аватар
+          avatar.src = `https://t.me/i/userpic/320/${player.username}.jpg`;
           avatar.onerror = () => avatar.src = 'default-avatar.png'; // запасной
         
           const name = document.createElement('div');
