@@ -610,8 +610,16 @@
           card.className = 'player-card';
         
           const avatar = document.createElement('img');
-          avatar.src = `https://t.me/i/userpic/320/${player.username}.jpg`;
-          avatar.onerror = () => avatar.src = 'default-avatar.png'; // запасной
+
+          if (player.username && player.username.length > 0) {
+            avatar.src = `https://t.me/i/userpic/320/${player.username}.jpg`;
+          } else {
+            avatar.src = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+          }
+          
+          avatar.onerror = () => {
+            avatar.src = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+          };
         
           const name = document.createElement('div');
           name.className = 'player-name';
