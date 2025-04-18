@@ -583,8 +583,8 @@
     
         // Получаем топ-10 игроков
         const playersRef = db.collection("tetris_players")
-                          .orderBy("high_score", "desc")
-                          .limit(10);
+                            .orderBy("high_score", "desc")
+                            .limit(10);
         
         const snapshot = await playersRef.get();
         const topPlayers = [];
@@ -601,7 +601,10 @@
     
         // Очищаем список
         list.innerHTML = "";
-    
+        
+        // Заполняем таблицу лидеров
+        list.innerHTML = "";
+
         topPlayers.forEach(player => {
           const card = document.createElement('div');
           card.className = 'player-card';
@@ -663,20 +666,17 @@
                                        .where("high_score", ">", userScore)
                                        .count()
                                        .get();
+          
+          const placeEl = document.getElementById("playerPlace");
+          if (placeEl) placeEl.innerText = `👤 Ваше место: ${userPlace}`;   
             
-            const userPlace = rankSnapshot.data().count + 1;
-            const placeEl = document.getElementById("playerPlace");
-            if (placeEl) placeEl.innerText = `👤 Ваше место: ${userPlace}`;   
-          }
-        }
+        
       } catch (e) {
         console.error("Ошибка загрузки лидерборда:", e);
         list.innerHTML = "Ошибка загрузки данных 😢";
       }
     }
-
-
-      
+    
     function closeLeaderboard() {
       document.getElementById('leaderboardModal').style.display = 'none';
       document.getElementById("playerPlace").innerText = "";
