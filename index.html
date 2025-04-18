@@ -610,16 +610,29 @@
           card.className = 'player-card';
         
           const avatar = document.createElement('img');
-
-          if (player.username && player.username.length > 0) {
-            avatar.src = `https://t.me/i/userpic/320/${player.username}.jpg`;
-          } else {
-            avatar.src = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
-          }
+          const fallback = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
           
-          avatar.onerror = () => {
-            avatar.src = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
-          };
+          if (player.username) {
+            const testImage = new Image();
+            const avatarUrl = `https://t.me/i/userpic/320/${player.username}.jpg`;
+          
+            testImage.onload = () => {
+              // Проверим, не подставилось ли дефолтное "невидимое" изображение (Telegram баг)
+              if (testImage.width <= 40) {
+                avatar.src = fallback;
+              } else {
+                avatar.src = avatarUrl;
+              }
+            };
+          
+            testImage.onerror = () => {
+              avatar.src = fallback;
+            };
+          
+            testImage.src = avatarUrl;
+          } else {
+            avatar.src = fallback;
+          }
         
           const name = document.createElement('div');
           name.className = 'player-name';
